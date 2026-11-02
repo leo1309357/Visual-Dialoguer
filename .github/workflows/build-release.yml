@@ -107,6 +107,10 @@ jobs:
     outputs:
       version: ${{ steps.read-version.outputs.version }}
       artifact: ${{ steps.stage.outputs.artifact }}
+    # secrets 不能在 if 表达式中直接引用,故先注入 job 级 env,再用 env.XXX 判断
+    env:
+      SIGN_B64: ${{ secrets.Base64_Encoded_Pfx }}
+      SIGN_KEY: ${{ secrets.Pfx_Key }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -132,21 +136,18 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: (Optional) Sign the executable
-        if: ${{ secrets.Base64_Encoded_Pfx != '' && secrets.Pfx_Key != '' }}
+        if: env.SIGN_B64 != '' && env.SIGN_KEY != ''
         shell: pwsh
-        env:
-          BASE64_PFX: ${{ secrets.Base64_Encoded_Pfx }}
-          PFX_KEY: ${{ secrets.Pfx_Key }}
         run: |
           $publishDir = "src\VisualDialoguer.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
           $certPath = Join-Path $env:RUNNER_TEMP 'signing.pfx'
-          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:BASE64_PFX))
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:SIGN_B64))
           # 自动定位最新版 signtool,避免硬编码 SDK 版本导致路径失效
           $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin" `
             -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue |
             Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
           if (-not $signtool) { throw "signtool.exe not found under Windows Kits" }
-          & $signtool sign /f $certPath /p $env:PFX_KEY /fd SHA256 `
+          & $signtool sign /f $certPath /p $env:SIGN_KEY /fd SHA256 `
             /tr http://timestamp.digicert.com /td SHA256 `
             "$publishDir\VisualDialoguer.exe"
 
