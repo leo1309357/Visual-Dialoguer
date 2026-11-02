@@ -1,0 +1,875 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「稿台 Paperstage」— VisualDialoguer 原创主题。
+
+  设计立意：把 CDLG 对话脚本编辑器当作编剧的案头来做。
+  · 纸叠层次（案垫 Desk → 稿纸 Paper → 浮起卡 Raised → 下沉井口 Sunken）
+    提供克制的深度，靠"顶部受光 + 发丝边 + 柔影"而不是重投影；
+  · 签名色取"批注朱砂"（编剧改稿的红笔），用在入口节点、选中态、主操作；
+  · 8 种指令类型各配一个语义色，列表与流程图共用同一套色标。
+
+  实现要点：除了自定义 Ps* 令牌，这里还覆写了框架语义键
+  （Button* / TextControl* / ComboBox* / ListViewItem* / AppBarButton* /
+  TabViewItem* / 焦点刷 / 圆角），这样原生控件的 hover、pressed、disabled
+  态自动跟着调色板走，不必逐个重做模板。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════ 日间案头 Light ═══════════════ -->
+        <ResourceDictionary x:Key="Light">
+
+            <!-- 纸叠层次 -->
+            <Color x:Key="PsDeskColor">#F0ECE4</Color>
+            <Color x:Key="PsPaperColor">#FAF8F4</Color>
+            <Color x:Key="PsPaperRaisedTopColor">#FFFFFF</Color>
+            <Color x:Key="PsPaperRaisedColor">#FCFBF8</Color>
+            <Color x:Key="PsPaperSunkenColor">#ECE7DE</Color>
+            <Color x:Key="PsEdgeColor">#DED8CC</Color>
+            <Color x:Key="PsEdgeStrongColor">#C6BFB1</Color>
+            <Color x:Key="PsSheenColor">#B8FFFFFF</Color>
+            <Color x:Key="PsShadowColor">#1C3A342A</Color>
+            <!-- 双层柔影的"环境层"：更大更淡，负责让纸片离开案垫 -->
+            <Color x:Key="PsShadowAmbientColor">#0A3A342A</Color>
+
+            <!-- 悬停：中性暖灰，与选中态的朱砂淡染区分开（两者原本同色，
+                 鼠标划过和选中分不清） -->
+            <Color x:Key="PsHoverFillColor">#143A342A</Color>
+            <!-- 井口顶部的内阴影：让下沉的字段区有"凹进去"的暗边 -->
+            <Color x:Key="PsWellShadeColor">#1A3A342A</Color>
+            <!-- 压在实底朱砂上的字：近纸色，5.37:1 -->
+            <Color x:Key="PsOnAccentColor">#FAF8F4</Color>
+            <!-- 对话框背后的遮罩：暖黑，不用纯黑 -->
+            <Color x:Key="PsScrimColor">#4D2A241E</Color>
+
+            <!-- 墨色三级：不用纯黑，避免在暖纸上发灰 -->
+            <Color x:Key="PsInkColor">#24211D</Color>
+            <Color x:Key="PsInkSecondaryColor">#57514A</Color>
+            <!-- 三级墨要压在 12px 的说明文字上，必须 ≥4.5:1（在案垫、稿纸、
+                 井口三种底色里最暗的井口上量得 4.68） -->
+            <Color x:Key="PsInkTertiaryColor">#6C655A</Color>
+
+            <!-- 批注朱砂（签名色） -->
+            <Color x:Key="PsCinnabarColor">#B0432E</Color>
+            <Color x:Key="PsCinnabarHoverColor">#BE4C35</Color>
+            <Color x:Key="PsCinnabarPressedColor">#963724</Color>
+            <Color x:Key="PsCinnabarWashColor">#1FB0432E</Color>
+            <Color x:Key="PsCinnabarEdgeColor">#4DB0432E</Color>
+
+            <!-- 牵线（流程图连线）：是流程信息本身，对案垫要过 3:1 -->
+            <Color x:Key="PsThreadColor">#8A8375</Color>
+
+            <!-- 流程图案头 -->
+            <Color x:Key="PsGraphDeskColor">#EDE8E0</Color>
+            <Color x:Key="PsGraphGridColor">#14A79E8C</Color>
+
+            <!-- 8 种指令的语义色标：徽章上的字是近纸色，每个色都要让字过 4.5:1，
+                 跳转(琥珀)与清标志(灰褐)原本偏亮，各压深一档 -->
+            <Color x:Key="PsKindSpeakerColor">#2E6D8C</Color>
+            <Color x:Key="PsKindLineColor">#6A5A94</Color>
+            <Color x:Key="PsKindChoiceColor">#B0432E</Color>
+            <Color x:Key="PsKindGotoColor">#9C5E14</Color>
+            <Color x:Key="PsKindSetColor">#3C7A4B</Color>
+            <Color x:Key="PsKindClearColor">#736859</Color>
+            <Color x:Key="PsKindEmitColor">#9E3E75</Color>
+            <Color x:Key="PsKindEndColor">#55504A</Color>
+
+            <!-- 徽章上的字色：语义色底较深，用近白才立得住 -->
+            <Color x:Key="PsBadgeInkColor">#F9F7F3</Color>
+
+            <!-- ── 令牌画刷 ── -->
+            <SolidColorBrush x:Key="PsDesk" Color="{StaticResource PsDeskColor}" />
+            <SolidColorBrush x:Key="PsPaper" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="PsPaperRaised" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="PsPaperSunken" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="PsEdge" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="PsEdgeStrong" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="PsInk" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="PsInkSecondary" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="PsInkTertiary" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="PsCinnabar" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="PsCinnabarHover" Color="{StaticResource PsCinnabarHoverColor}" />
+            <SolidColorBrush x:Key="PsCinnabarPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+            <SolidColorBrush x:Key="PsCinnabarWash" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="PsCinnabarEdge" Color="{StaticResource PsCinnabarEdgeColor}" />
+            <SolidColorBrush x:Key="PsThread" Color="{StaticResource PsThreadColor}" />
+            <SolidColorBrush x:Key="PsGraphDesk" Color="{StaticResource PsGraphDeskColor}" />
+            <SolidColorBrush x:Key="PsGraphGrid" Color="{StaticResource PsGraphGridColor}" />
+
+            <SolidColorBrush x:Key="PsKindSpeaker" Color="{StaticResource PsKindSpeakerColor}" />
+            <SolidColorBrush x:Key="PsKindLine" Color="{StaticResource PsKindLineColor}" />
+            <SolidColorBrush x:Key="PsKindChoice" Color="{StaticResource PsKindChoiceColor}" />
+            <SolidColorBrush x:Key="PsKindGoto" Color="{StaticResource PsKindGotoColor}" />
+            <SolidColorBrush x:Key="PsKindSet" Color="{StaticResource PsKindSetColor}" />
+            <SolidColorBrush x:Key="PsKindClear" Color="{StaticResource PsKindClearColor}" />
+            <SolidColorBrush x:Key="PsKindEmit" Color="{StaticResource PsKindEmitColor}" />
+            <SolidColorBrush x:Key="PsKindEnd" Color="{StaticResource PsKindEndColor}" />
+            <SolidColorBrush x:Key="PsBadgeInk" Color="{StaticResource PsBadgeInkColor}" />
+
+            <!-- 浮起纸面的顶部受光渐变：轻拟物的关键一笔 -->
+            <LinearGradientBrush x:Key="PsCardFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource PsPaperRaisedTopColor}" Offset="0" />
+                <GradientStop Color="{StaticResource PsPaperRaisedColor}" Offset="0.55" />
+                <GradientStop Color="{StaticResource PsPaperColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- 纸片顶部那道 1px 受光：两端淡出，像光从斜上方擦过纸缘。
+                 这是轻拟物的"上高光"，与下方柔影一起给出厚度感。 -->
+            <LinearGradientBrush x:Key="PsSheenLine" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#00FFFFFF" Offset="0" />
+                <GradientStop Color="{StaticResource PsSheenColor}" Offset="0.5" />
+                <GradientStop Color="#00FFFFFF" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- 井口顶部的内阴影：上深下无，制造"沉下去"的暗边 -->
+            <LinearGradientBrush x:Key="PsWellShade" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource PsWellShadeColor}" Offset="0" />
+                <GradientStop Color="#00FFFFFF" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- 井口的内凹感：上深下浅 -->
+            <LinearGradientBrush x:Key="PsWellFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource PsPaperSunkenColor}" Offset="0" />
+                <GradientStop Color="{StaticResource PsPaperColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="PsShadow" Color="{StaticResource PsShadowColor}" />
+            <SolidColorBrush x:Key="PsShadowAmbient" Color="{StaticResource PsShadowAmbientColor}" />
+            <SolidColorBrush x:Key="PsHoverFill" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="PsOnAccent" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="PsScrim" Color="{StaticResource PsScrimColor}" />
+
+            <!-- ── 框架语义键覆写 ── -->
+
+            <!-- 按钮：浮起纸片，按下时微沉、朱砂描边 -->
+            <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource PsPaperSunkenColor}" />
+            <!-- 禁用态刻意与按下态分开：按下是"沉进案垫"，禁用是"还平放着，
+                 但推不动"。两态同色会让人以为按钮被按住没回弹。 -->
+            <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="{StaticResource PsDeskColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource PsCinnabarEdgeColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="ButtonForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource PsInkTertiaryColor}" />
+
+            <!-- 文本框：下沉井口，聚焦时朱砂勾边 -->
+            <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlButtonForeground" Color="{StaticResource PsInkSecondaryColor}" />
+
+            <!-- 下拉框 -->
+            <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{StaticResource PsCinnabarEdgeColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource PsCinnabarWashColor}" />
+
+            <!-- 列表项：悬停是中性暖灰，选中才是朱砂淡染。
+                 两者的底色必须分开，否则"划过"和"选中"看起来一样。
+                 选中行文字保持墨色（15:1），朱砂只做底色与书脊，
+                 免得 cinnabar-on-wash 在深色下掉到 4.5 以下。 -->
+            <SolidColorBrush x:Key="ListViewItemForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemRevealBorderBrush" Color="{StaticResource PsCinnabarColor}" />
+            <!-- 框架默认在选中行左侧再画一条强调色竖条；本主题的行首已有
+                 "书脊"，两条并排会打架，这里把框架那条收掉。 -->
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPointerOverBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPressedBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorDisabledBrush" Color="Transparent" />
+
+            <!-- 命令栏按钮 -->
+            <SolidColorBrush x:Key="AppBarButtonBackground" Color="#00000000" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPointerOver" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPressed" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForeground" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPointerOver" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+
+            <!-- 页签：选中页是浮起的稿纸，未选中是案垫上的压痕 -->
+            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="#00000000" />
+            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="TabViewItemForeground" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TabViewItemForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="{StaticResource PsCinnabarColor}" />
+
+            <!-- 通用填充与文字令牌（部分控件与自绘都会读） -->
+            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDisabledBrush" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="{StaticResource PsEdgeColor}" />
+
+            <!-- 焦点框：朱砂 -->
+            <SolidColorBrush x:Key="SystemControlFocusVisualPrimaryBrush" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="SystemControlFocusVisualSecondaryBrush" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="SystemAccentColorLight1" Color="{StaticResource PsCinnabarHoverColor}" />
+
+            <!-- ── 主操作按钮（内置 AccentButtonStyle）──
+                 不新写按钮模板：覆写框架的强调键，hover / pressed / disabled
+                 三态由模板自己切换。实底朱砂 + 纸色字（5.37:1）。
+                 disabled 一档故意留给框架默认的灰底，避免"淡朱砂底 + 纸色字"
+                 那种读不出来的组合。 -->
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="{StaticResource PsCinnabarHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="{StaticResource PsCinnabarHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="{StaticResource PsOnAccentColor}" />
+
+            <!-- 提示气泡：浮起的小纸片 -->
+            <SolidColorBrush x:Key="ToolTipBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ToolTipForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ToolTipBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+
+            <!-- 对话框：稿纸底 + 遮罩压暗案头 -->
+            <SolidColorBrush x:Key="ContentDialogBackground" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="ContentDialogSmokeFill" Color="{StaticResource PsScrimColor}" />
+
+            <!-- 滚动条：发丝般的存在，悬停才压深 -->
+            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="Transparent" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackground" Color="Transparent" />
+
+            <!-- 命令栏溢出菜单 -->
+            <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="{StaticResource PsHoverFillColor}" />
+
+            <!-- 命令栏的分隔线，与卡片发丝边同色 -->
+            <SolidColorBrush x:Key="AppBarSeparatorForeground" Color="{StaticResource PsEdgeColor}" />
+
+            <!-- 文本框里的选区：朱砂淡染，而不是系统蓝 -->
+            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{StaticResource PsCinnabarEdgeColor}" />
+        </ResourceDictionary>
+
+        <!-- ═══════════════ 夜读案头 Dark ═══════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- 纸叠层次：暖黑案垫上压着略亮的稿纸 -->
+            <Color x:Key="PsDeskColor">#191816</Color>
+            <Color x:Key="PsPaperColor">#222120</Color>
+            <Color x:Key="PsPaperRaisedTopColor">#2D2C29</Color>
+            <Color x:Key="PsPaperRaisedColor">#272624</Color>
+            <Color x:Key="PsPaperSunkenColor">#151413</Color>
+            <Color x:Key="PsEdgeColor">#3A3833</Color>
+            <Color x:Key="PsEdgeStrongColor">#4C4941</Color>
+            <Color x:Key="PsSheenColor">#1FFFFFFF</Color>
+            <Color x:Key="PsShadowColor">#4D000000</Color>
+            <!-- 暗底上的环境影只能靠"更黑"，透明度比日间更低 -->
+            <Color x:Key="PsShadowAmbientColor">#2B000000</Color>
+
+            <!-- 悬停：微亮的中性层，与朱砂淡染的选中态区分 -->
+            <Color x:Key="PsHoverFillColor">#16FFFFFF</Color>
+            <Color x:Key="PsWellShadeColor">#33000000</Color>
+            <!-- 压在实底朱砂上的字：暗底语义色已提亮，改深字（5.55:1） -->
+            <Color x:Key="PsOnAccentColor">#17161A</Color>
+            <Color x:Key="PsScrimColor">#99000000</Color>
+
+            <!-- 墨色三级：暖白，不用纯白以免在暗纸上刺眼 -->
+            <Color x:Key="PsInkColor">#EDE9E2</Color>
+            <Color x:Key="PsInkSecondaryColor">#B7B1A6</Color>
+            <!-- 三级墨同样要压在 12px 说明文字上：暗底最亮处（抬升卡 #2D2C29）
+                 量得 5.00，留够余量 -->
+            <Color x:Key="PsInkTertiaryColor">#9C9388</Color>
+
+            <!-- 批注朱砂：暗底上要提亮才立得住 -->
+            <Color x:Key="PsCinnabarColor">#DE6E58</Color>
+            <Color x:Key="PsCinnabarHoverColor">#EC8269</Color>
+            <Color x:Key="PsCinnabarPressedColor">#CB6249</Color>
+            <Color x:Key="PsCinnabarWashColor">#26DE6E58</Color>
+            <Color x:Key="PsCinnabarEdgeColor">#59DE6E58</Color>
+
+            <!-- 牵线：暗底上要提亮才看得见 -->
+            <Color x:Key="PsThreadColor">#7A7368</Color>
+
+            <!-- 流程图案头 -->
+            <Color x:Key="PsGraphDeskColor">#1E1D1B</Color>
+            <Color x:Key="PsGraphGridColor">#14FFFFFF</Color>
+
+            <!-- 8 种指令的语义色标：暗底统一提亮一档 -->
+            <Color x:Key="PsKindSpeakerColor">#7CB2CD</Color>
+            <Color x:Key="PsKindLineColor">#AC9AD6</Color>
+            <Color x:Key="PsKindChoiceColor">#DE6E58</Color>
+            <Color x:Key="PsKindGotoColor">#DFA95F</Color>
+            <Color x:Key="PsKindSetColor">#7EBC8C</Color>
+            <Color x:Key="PsKindClearColor">#A49B8E</Color>
+            <Color x:Key="PsKindEmitColor">#CE82AE</Color>
+            <Color x:Key="PsKindEndColor">#9A948B</Color>
+
+            <!-- 徽章上的字色：暗底语义色已提亮，改用深字保证对比 -->
+            <Color x:Key="PsBadgeInkColor">#17161A</Color>
+
+            <!-- ── 令牌画刷 ── -->
+            <SolidColorBrush x:Key="PsDesk" Color="{StaticResource PsDeskColor}" />
+            <SolidColorBrush x:Key="PsPaper" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="PsPaperRaised" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="PsPaperSunken" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="PsEdge" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="PsEdgeStrong" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="PsInk" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="PsInkSecondary" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="PsInkTertiary" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="PsCinnabar" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="PsCinnabarHover" Color="{StaticResource PsCinnabarHoverColor}" />
+            <SolidColorBrush x:Key="PsCinnabarPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+            <SolidColorBrush x:Key="PsCinnabarWash" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="PsCinnabarEdge" Color="{StaticResource PsCinnabarEdgeColor}" />
+            <SolidColorBrush x:Key="PsThread" Color="{StaticResource PsThreadColor}" />
+            <SolidColorBrush x:Key="PsGraphDesk" Color="{StaticResource PsGraphDeskColor}" />
+            <SolidColorBrush x:Key="PsGraphGrid" Color="{StaticResource PsGraphGridColor}" />
+
+            <SolidColorBrush x:Key="PsKindSpeaker" Color="{StaticResource PsKindSpeakerColor}" />
+            <SolidColorBrush x:Key="PsKindLine" Color="{StaticResource PsKindLineColor}" />
+            <SolidColorBrush x:Key="PsKindChoice" Color="{StaticResource PsKindChoiceColor}" />
+            <SolidColorBrush x:Key="PsKindGoto" Color="{StaticResource PsKindGotoColor}" />
+            <SolidColorBrush x:Key="PsKindSet" Color="{StaticResource PsKindSetColor}" />
+            <SolidColorBrush x:Key="PsKindClear" Color="{StaticResource PsKindClearColor}" />
+            <SolidColorBrush x:Key="PsKindEmit" Color="{StaticResource PsKindEmitColor}" />
+            <SolidColorBrush x:Key="PsKindEnd" Color="{StaticResource PsKindEndColor}" />
+            <SolidColorBrush x:Key="PsBadgeInk" Color="{StaticResource PsBadgeInkColor}" />
+
+            <LinearGradientBrush x:Key="PsCardFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource PsPaperRaisedTopColor}" Offset="0" />
+                <GradientStop Color="{StaticResource PsPaperRaisedColor}" Offset="0.55" />
+                <GradientStop Color="{StaticResource PsPaperColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="PsSheenLine" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#00FFFFFF" Offset="0" />
+                <GradientStop Color="{StaticResource PsSheenColor}" Offset="0.5" />
+                <GradientStop Color="#00FFFFFF" Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="PsWellShade" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource PsWellShadeColor}" Offset="0" />
+                <GradientStop Color="#00FFFFFF" Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="PsWellFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource PsPaperSunkenColor}" Offset="0" />
+                <GradientStop Color="{StaticResource PsPaperColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="PsShadow" Color="{StaticResource PsShadowColor}" />
+            <SolidColorBrush x:Key="PsShadowAmbient" Color="{StaticResource PsShadowAmbientColor}" />
+            <SolidColorBrush x:Key="PsHoverFill" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="PsOnAccent" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="PsScrim" Color="{StaticResource PsScrimColor}" />
+
+            <!-- ── 框架语义键覆写 ── -->
+
+            <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource PsPaperSunkenColor}" />
+            <!-- 禁用态刻意与按下态分开：按下是"沉进案垫"，禁用是"还平放着，
+                 但推不动"。两态同色会让人以为按钮被按住没回弹。 -->
+            <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="{StaticResource PsDeskColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource PsCinnabarEdgeColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="ButtonForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource PsInkTertiaryColor}" />
+
+            <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlButtonForeground" Color="{StaticResource PsInkSecondaryColor}" />
+
+            <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{StaticResource PsCinnabarEdgeColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource PsCinnabarWashColor}" />
+
+            <!-- 列表项：与日间同一套状态语汇（悬停中性、选中朱砂），
+                 只是暗底上的中性层改成提亮而非压暗 -->
+            <SolidColorBrush x:Key="ListViewItemForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="{StaticResource PsHoverFillColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemRevealBorderBrush" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPointerOverBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPressedBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorDisabledBrush" Color="Transparent" />
+
+            <SolidColorBrush x:Key="AppBarButtonBackground" Color="#00000000" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPointerOver" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPressed" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForeground" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPointerOver" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+
+            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="#00000000" />
+            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="{StaticResource PsCinnabarWashColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="TabViewItemForeground" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TabViewItemForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderForegroundSelected" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="{StaticResource PsCinnabarColor}" />
+
+            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDisabledBrush" Color="{StaticResource PsPaperSunkenColor}" />
+            <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="{StaticResource PsEdgeColor}" />
+
+            <SolidColorBrush x:Key="SystemControlFocusVisualPrimaryBrush" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="SystemControlFocusVisualSecondaryBrush" Color="{StaticResource PsPaperRaisedTopColor}" />
+            <SolidColorBrush x:Key="SystemAccentColorLight1" Color="{StaticResource PsCinnabarHoverColor}" />
+
+            <!-- ── 主操作按钮（内置 AccentButtonStyle）──
+                 不新写按钮模板：覆写框架的强调键，hover / pressed / disabled
+                 三态由模板自己切换。实底朱砂 + 纸色字（5.37:1）。
+                 disabled 一档故意留给框架默认的灰底，避免"淡朱砂底 + 纸色字"
+                 那种读不出来的组合。 -->
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="{StaticResource PsCinnabarHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="{StaticResource PsCinnabarColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="{StaticResource PsCinnabarHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="{StaticResource PsCinnabarPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="{StaticResource PsOnAccentColor}" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="{StaticResource PsOnAccentColor}" />
+
+            <!-- 提示气泡：浮起的小纸片 -->
+            <SolidColorBrush x:Key="ToolTipBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="ToolTipForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="ToolTipBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+
+            <!-- 对话框：稿纸底 + 遮罩压暗案头 -->
+            <SolidColorBrush x:Key="ContentDialogBackground" Color="{StaticResource PsPaperColor}" />
+            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="{StaticResource PsEdgeColor}" />
+            <SolidColorBrush x:Key="ContentDialogSmokeFill" Color="{StaticResource PsScrimColor}" />
+
+            <!-- 滚动条：发丝般的存在，悬停才压深 -->
+            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="{StaticResource PsEdgeStrongColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="{StaticResource PsInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="{StaticResource PsInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="Transparent" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackground" Color="Transparent" />
+
+            <!-- 命令栏溢出菜单 -->
+            <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="{StaticResource PsPaperRaisedColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="{StaticResource PsInkColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="{StaticResource PsHoverFillColor}" />
+
+            <!-- 命令栏的分隔线，与卡片发丝边同色 -->
+            <SolidColorBrush x:Key="AppBarSeparatorForeground" Color="{StaticResource PsEdgeColor}" />
+
+            <!-- 文本框里的选区：朱砂淡染，而不是系统蓝 -->
+            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{StaticResource PsCinnabarEdgeColor}" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- ═══════════ 主题无关：圆角与尺度 ═══════════ -->
+
+    <!-- 纸片圆角：比 WinUI 默认的 4 略大，边缘更"软"一点 -->
+    <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+    <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
+
+    <CornerRadius x:Key="PsCardRadius">10</CornerRadius>
+    <CornerRadius x:Key="PsBadgeRadius">5</CornerRadius>
+    <Thickness x:Key="PsHairline">1</Thickness>
+
+    <!-- 字号阶梯：稿纸上的正文略大于系统默认，便于长台词阅读 -->
+    <x:Double x:Key="PsFontSizeSection">15</x:Double>
+    <x:Double x:Key="PsFontSizeBody">14</x:Double>
+    <x:Double x:Key="PsFontSizeCaption">12</x:Double>
+    <x:Double x:Key="PsFontSizeBadge">12</x:Double>
+
+    <!-- 徽章：语义色底 + 纸色字，单字居中 -->
+    <x:Double x:Key="PsBadgeSize">22</x:Double>
+
+    <!-- ═══════════ 组件样式 ═══════════ -->
+
+    <!-- 间距阶梯：卡内留白 12、块间 8、行内 6（只定义真正用到的档位，
+         不留"备用"令牌——用不到的令牌和写死的数字一样不可维护） -->
+    <x:Double x:Key="PsSpaceS">6</x:Double>
+    <x:Double x:Key="PsSpaceM">8</x:Double>
+    <x:Double x:Key="PsSpaceL">12</x:Double>
+
+    <!-- Padding / Margin 是 Thickness，不能拿上面的 Double 顶替 -->
+    <Thickness x:Key="PsPadCard">12</Thickness>
+    <Thickness x:Key="PsPadBanner">12,8</Thickness>
+    <Thickness x:Key="PsPadStatusBar">14,7</Thickness>
+    <Thickness x:Key="PsPadRow">0,3</Thickness>
+
+    <!-- 卡片标题：节点 / 指令 / 属性 -->
+    <Style x:Key="PsSectionTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource PsFontSizeSection}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource PsInk}" />
+    </Style>
+
+    <!-- 次要说明文字：状态栏、流程图提示 -->
+    <Style x:Key="PsCaption" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource PsFontSizeCaption}" />
+        <Setter Property="Foreground" Value="{ThemeResource PsInkSecondary}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!--
+      浮起纸片 PsCard：主界面所有卡片的底座，替代原先每处手写的
+      Background/BorderBrush/CornerRadius 三件套。
+
+      三层叠出轻拟物的厚度：
+        ① 环境影 —— 大而淡，向四周铺开，先让纸离开案垫；
+        ② 关键影 —— 贴边 1~3px、略偏下，给出"纸厚 2mm"的错觉；
+        ③ 卡面   —— 顶部受光渐变 + 1px 发丝边 + 顶缘一道淡出的高光。
+      影子用负 Margin 画到边框之外（Grid 不裁剪子元素），
+      因此卡片外观与 Border 一致，只是多了厚度。
+    -->
+    <Style x:Key="PsCard" TargetType="ContentControl">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Grid>
+                        <Border
+                            Margin="-4,2,-4,-6"
+                            Background="{ThemeResource PsShadowAmbient}"
+                            CornerRadius="14"
+                            IsHitTestVisible="False" />
+                        <Border
+                            Margin="-1,2,-1,-3"
+                            Background="{ThemeResource PsShadow}"
+                            CornerRadius="12"
+                            IsHitTestVisible="False" />
+                        <Border
+                            Background="{ThemeResource PsCardFace}"
+                            BorderBrush="{ThemeResource PsEdge}"
+                            BorderThickness="{StaticResource PsHairline}"
+                            CornerRadius="{StaticResource PsCardRadius}">
+                            <Grid>
+                                <!-- 顶缘高光：两端淡出，像光从斜上方擦过纸边 -->
+                                <Border
+                                    Height="1"
+                                    Margin="11,1,11,0"
+                                    VerticalAlignment="Top"
+                                    Background="{ThemeResource PsSheenLine}"
+                                    IsHitTestVisible="False" />
+                                <ContentPresenter
+                                    Margin="{TemplateBinding Padding}"
+                                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      下沉井口 PsWell：属性面板的字段区。
+      与卡片相反——顶部压暗、底部受光，一眼看出是"凹"进去的；
+      里面嵌的输入框聚焦时浮起，形成"井里有纸"的层次。
+    -->
+    <Style x:Key="PsWell" TargetType="ContentControl">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border
+                        Background="{ThemeResource PsWellFace}"
+                        BorderBrush="{ThemeResource PsEdge}"
+                        BorderThickness="{StaticResource PsHairline}"
+                        CornerRadius="{StaticResource PsCardRadius}">
+                        <Grid>
+                            <Border
+                                Height="7"
+                                Margin="1,1,1,0"
+                                VerticalAlignment="Top"
+                                CornerRadius="9,9,0,0"
+                                Background="{ThemeResource PsWellShade}"
+                                IsHitTestVisible="False" />
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      工具栏图标钮 PsIconButton：平时是"看不见的方格"，悬停才浮出一层中性底。
+      和文字按钮同高 32、无边框——一排图标并排时不会出现一串小方框；
+      四个状态都写死在模板里，不依赖框架默认色，深色下也是同一套语汇。
+    -->
+    <Style x:Key="PsIconButton" TargetType="Button">
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource PsInkSecondary}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="FocusVisualMargin" Value="-3" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid
+                        x:Name="Root"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Transparent" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PsInkSecondary}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Root"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="1"
+                                            Duration="0:0:0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PsHoverFill}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PsInk}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Root"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="1"
+                                            Duration="0:0:0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PsPaperSunken}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PsCinnabarPressed}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Root"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="1"
+                                            Duration="0:0:0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Transparent" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PsInkTertiary}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Root"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0.45"
+                                            Duration="0:0:0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <ContentPresenter
+                            x:Name="Content"
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            Foreground="{TemplateBinding Foreground}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <!-- ═══════════ 列表行模板：两页共用 ═══════════ -->
+
+    <!--
+      节点行：左侧一道"书脊"（入口节点为朱砂），像案头立着的索引卡。
+    -->
+    <DataTemplate x:Key="PsNodeRow">
+        <Grid ColumnSpacing="{StaticResource PsSpaceM}" Padding="{StaticResource PsPadRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Width="3"
+                Height="18"
+                CornerRadius="1.5"
+                Background="{Binding SpineBrush}" />
+            <TextBlock
+                Grid.Column="1"
+                Text="{Binding Id}"
+                FontSize="{StaticResource PsFontSizeBody}"
+                VerticalAlignment="Center"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                Grid.Column="2"
+                Text="{Binding CountText}"
+                FontSize="{StaticResource PsFontSizeCaption}"
+                Foreground="{ThemeResource PsInkTertiary}"
+                VerticalAlignment="Center" />
+        </Grid>
+    </DataTemplate>
+
+    <!--
+      指令行：语义色单字徽章 + 摘要。徽章颜色与流程图书脊同源，
+      扫一眼就能认出这条指令是干什么的。
+    -->
+    <DataTemplate x:Key="PsInstructionRow">
+        <Grid ColumnSpacing="9" Padding="{StaticResource PsPadRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Width="{StaticResource PsBadgeSize}"
+                Height="{StaticResource PsBadgeSize}"
+                CornerRadius="{StaticResource PsBadgeRadius}"
+                Background="{Binding KindBrush}">
+                <TextBlock
+                    Text="{Binding KindGlyph}"
+                    FontSize="{StaticResource PsFontSizeBadge}"
+                    Foreground="{ThemeResource PsBadgeInk}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock
+                    Text="{Binding SummaryText}"
+                    FontSize="{StaticResource PsFontSizeBody}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Text="{Binding KindLabel}"
+                    FontSize="{StaticResource PsFontSizeCaption}"
+                    Foreground="{ThemeResource PsInkTertiary}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+</ResourceDictionary>

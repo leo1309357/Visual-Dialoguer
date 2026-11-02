@@ -1,0 +1,24 @@
+# 示例对话脚本：验证「稿台」主题的渲染效果
+dialogue demo
+  entry start
+  node start
+    speaker 旁白
+    line 旅人，你终于来了。
+    choice 询问来意 -> talk
+    choice 直接离开 -> bye
+  node talk
+    speaker 旅人
+    line 我想打听去北境的路。
+    set met_guide true
+    emit quest_start chapter=1
+    goto guide
+  node guide
+    speaker 向导
+    line 跟我来，路上细说。
+    clear met_guide
+    goto start
+  node bye
+    speaker 旁白
+    line 旅人转身没入风雪。
+    end
+end

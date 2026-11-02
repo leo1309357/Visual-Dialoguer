@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>VisualDialoguer.Core</RootNamespace>
+    <AssemblyName>VisualDialoguer.Core</AssemblyName>
+    <Description>CDLG 对话脚本的模型、序列化与编辑状态层。不依赖任何 UI 框架。</Description>
+  </PropertyGroup>
+
+</Project>

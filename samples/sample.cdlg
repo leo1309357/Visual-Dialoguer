@@ -1,0 +1,19 @@
+# 示例对话脚本：与 cdlg 解析器兼容
+dialogue intro
+  entry start
+  node start
+    speaker 旁白
+    line 你好，这是一段示例对话。
+    choice 继续交谈 -> talk
+    choice 结束对话 -> bye
+  node talk
+    speaker 旅行者
+    line 世界，你好！
+    set mood happy
+    emit quest_done "chapter=1"
+    goto start
+  node bye
+    speaker 旁白
+    line 再见，祝你旅途愉快。
+    end
+end
