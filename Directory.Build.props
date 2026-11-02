@@ -9,9 +9,9 @@
     <Copyright>Copyright (c) 2026 Leo Jeang. All Rights Reserved.</Copyright>
     <NeutralLanguage>zh-Hans</NeutralLanguage>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
-    <!-- 版本号：程序集版本 0.0.1，文件信息中显示为 Dev-0.0.1 -->
-    <Version>0.0.1</Version>
-    <InformationalVersion>Dev-0.0.1</InformationalVersion>
+    <!-- 版本号：程序集版本 0.2.1，文件信息中显示为 Dev-0.2.1 -->
+    <Version>0.2.1</Version>
+    <InformationalVersion>Dev-0.2.1</InformationalVersion>
   </PropertyGroup>
 
 </Project>

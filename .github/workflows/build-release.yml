@@ -1,0 +1,242 @@
+# ==============================================================================
+# VisualDialoguer — Build, Publish & Release 工作流
+#
+# 功能范围:
+#   1. 矩阵构建 Debug / Release,并执行单元测试(仅一次)
+#   2. 发布单文件 portable exe(dotnet publish,WinUI 3 / Windows App SDK)
+#   3. 读取 Directory.Build.props 中的版本号,用于命名产物与 Release
+#   4. (可选)代码签名——配置 Base64_Encoded_Pfx 与 Pfx_Key 两个 secret 后自动启用
+#   5. 创建 GitHub Release 并上传产物、自动生成 Release Notes
+#
+# 触发方式:
+#   - push / PR 到 master:只构建 + 测试 + 上传构建产物,不发布
+#   - push 形如 v* 的标签:构建 + 发布 + 创建 Release(用该标签)
+#   - 手动 workflow_dispatch + 勾选 create_release:构建 + 发布 + 自动打 v<版本> 标签并发布
+#
+# 可维护性约定:
+#   - 所有路径、运行时、产物名集中在 env 区块,改动只动一处
+#   - 发布与 Release 用独立的 job,通过 needs 传递版本号,职责清晰
+#   - 签名步骤通过 secret 是否存在自动开关,缺失时不阻塞构建
+# ==============================================================================
+
+name: Build, Publish & Release
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: '是否创建 GitHub Release 并上传产物(将自动打 v<版本> 标签)'
+        type: boolean
+        default: false
+
+# 同一分支/标签同时只有一次运行在跑,新运行会取消旧运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 需要写权限以创建 Release
+permissions:
+  contents: write
+
+env:
+  # ---- 仓库相关配置(集中在此修改) ----
+  SOLUTION: VisualDialoguer.sln
+  TEST_PROJECT: tests/VisualDialoguer.Core.Tests/VisualDialoguer.Core.Tests.csproj
+  APP_PROJECT: src/VisualDialoguer.App/VisualDialoguer.App.csproj
+  RUNTIME: win-x64
+  VERSION_PROPS: Directory.Build.props                  # 版本号读取来源
+
+jobs:
+
+  # ---------------------------------------------------------------------------
+  # 1. 构建 + 测试
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build & Test (${{ matrix.configuration }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [ Debug, Release ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET SDK 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore $env:SOLUTION
+
+      - name: Build (${{ matrix.configuration }})
+        run: dotnet build $env:SOLUTION --configuration $env:CONFIGURATION --no-restore
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+
+      # 单文件发布只针对 Release;测试在 Release 上跑一次即可(避免重复)
+      - name: Run unit tests (Release)
+        if: matrix.configuration == 'Release'
+        run: dotnet test $env:TEST_PROJECT --configuration Release --no-build --logger "trx;LogFileName=tests.trx"
+
+      - name: Upload test results
+        if: matrix.configuration == 'Release' && (success() || failure())
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/*.trx'
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # 2. 发布单文件 portable exe(仅 master 主分支/标签/手动)
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish single-file exe
+    runs-on: windows-latest
+    needs: build
+    # pull_request 只做检查,不发布
+    if: github.event_name != 'pull_request'
+    outputs:
+      version: ${{ steps.read-version.outputs.version }}
+      artifact: ${{ steps.stage.outputs.artifact }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET SDK 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish portable exe
+        run: dotnet publish $env:APP_PROJECT --configuration Release --runtime $env:RUNTIME --self-contained true
+        env:
+          RUNTIME: ${{ env.RUNTIME }}
+
+      - name: Read version from ${{ env.VERSION_PROPS }}
+        id: read-version
+        shell: pwsh
+        run: |
+          $version = (Select-Xml -Path $env:VERSION_PROPS -XPath '//Version').Node.InnerText
+          Write-Host "Detected version: $version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: (Optional) Sign the executable
+        if: ${{ secrets.Base64_Encoded_Pfx != '' && secrets.Pfx_Key != '' }}
+        shell: pwsh
+        env:
+          BASE64_PFX: ${{ secrets.Base64_Encoded_Pfx }}
+          PFX_KEY: ${{ secrets.Pfx_Key }}
+        run: |
+          $publishDir = "src\VisualDialoguer.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
+          $certPath = Join-Path $env:RUNNER_TEMP 'signing.pfx'
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:BASE64_PFX))
+          # 自动定位最新版 signtool,避免硬编码 SDK 版本导致路径失效
+          $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin" `
+            -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $signtool) { throw "signtool.exe not found under Windows Kits" }
+          & $signtool sign /f $certPath /p $env:PFX_KEY /fd SHA256 `
+            /tr http://timestamp.digicert.com /td SHA256 `
+            "$publishDir\VisualDialoguer.exe"
+
+      - name: Stage artifact with version
+        id: stage
+        shell: pwsh
+        run: |
+          $version = "${{ steps.read-version.outputs.version }}"
+          $artifact = "VisualDialoguer-$env:RUNTIME-v$version"
+          New-Item -ItemType Directory -Force -Path ".\dist" | Out-Null
+          Copy-Item -LiteralPath "src\VisualDialoguer.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\VisualDialoguer.exe" `
+            -Destination ".\dist\$artifact.exe" -Force
+          "artifact=$artifact" >> $env:GITHUB_OUTPUT
+        env:
+          RUNTIME: ${{ env.RUNTIME }}
+
+      - name: Upload portable exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.stage.outputs.artifact }}
+          path: dist/${{ steps.stage.outputs.artifact }}.exe
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # 3. 发布 GitHub Release(推送 v* 标签,或手动勾选 create_release)
+  # ---------------------------------------------------------------------------
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish
+    # 仅在标签推送或手动请求发布时执行(注意:boolean input 在 if 里是字符串,须显式比较)
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.create_release == 'true')
+    steps:
+      - name: Checkout (for changelog)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download portable exe
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.publish.outputs.artifact }}
+          path: ./dist
+
+      - name: Generate release notes
+        id: notes
+        shell: bash
+        run: |
+          # 上一个标签到现在的提交,作为 Release Notes
+          prev_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$prev_tag" ]; then
+            git log --oneline --no-merges "$prev_tag..HEAD" > /tmp/notes.md
+          else
+            git log --oneline --no-merges > /tmp/notes.md
+          fi
+          echo "::group::Generated notes"
+          cat /tmp/notes.md
+          echo "::endgroup::"
+
+      - name: Create or update release
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.publish.outputs.version }}
+          ARTIFACT: ${{ needs.publish.outputs.artifact }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="v$VERSION"
+          fi
+          NOTES_FILE="/tmp/notes.md"
+          # 同标签 Release 已存在则更新,否则创建(并确保标签存在)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "VisualDialoguer $TAG" --notes-file "$NOTES_FILE" || true
+          else
+            if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+              git tag "$TAG"
+              git push origin "$TAG"
+            fi
+            gh release create "$TAG" "dist/$ARTIFACT.exe" --title "VisualDialoguer $TAG" --notes-file "$NOTES_FILE"
+          fi
+          echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "## Release 完成" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tag: \`${{ steps.release.outputs.release_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact: \`${{ needs.publish.outputs.artifact }}.exe\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: \`${{ needs.publish.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
