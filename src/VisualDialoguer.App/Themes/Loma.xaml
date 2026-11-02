@@ -233,7 +233,7 @@
             <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource LomaInkTertiaryColor}" />
 
             <!-- 文本框：下沉井口，聚焦时浮起一圈 accent 色 -->
-            <CornerRadius x:Key="TextControlCornerRadius">10</CornerRadius>
+            <CornerRadius x:Key="TextControlCornerRadius">6</CornerRadius>
             <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource LomaSunkenColor}" />
             <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource LomaSunkenDeepColor}" />
             <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource LomaRaisedColor}" />
@@ -526,7 +526,7 @@
             <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{StaticResource LomaInkSecondaryColor}" />
             <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource LomaInkTertiaryColor}" />
 
-            <CornerRadius x:Key="TextControlCornerRadius">10</CornerRadius>
+            <CornerRadius x:Key="TextControlCornerRadius">6</CornerRadius>
             <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource LomaSunkenColor}" />
             <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource LomaSunkenDeepColor}" />
             <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource LomaRaisedColor}" />
@@ -636,15 +636,15 @@
 
     <!-- ═══════════ 主题无关：圆角、尺度、排版 ═══════════ -->
 
-    <!-- Loma 的核心：大圆角。所有控件统一 12px 起，卡片 16px，让边缘像
-         被手指揉过一样圆润，没有锋利的直角。 -->
-    <CornerRadius x:Key="ControlCornerRadius">12</CornerRadius>
-    <CornerRadius x:Key="OverlayCornerRadius">16</CornerRadius>
+    <!-- Loma 的圆角：小圆角。控件 6px 起、卡片 8px,边缘收敛利落,
+         保留双向阴影语言,不再被大弧线揉圆。 -->
+    <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+    <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
 
-    <CornerRadius x:Key="LomaCardRadius">16</CornerRadius>
-    <CornerRadius x:Key="LomaWellRadius">12</CornerRadius>
-    <CornerRadius x:Key="LomaButtonRadius">12</CornerRadius>
-    <CornerRadius x:Key="LomaBadgeRadius">8</CornerRadius>
+    <CornerRadius x:Key="LomaCardRadius">8</CornerRadius>
+    <CornerRadius x:Key="LomaWellRadius">6</CornerRadius>
+    <CornerRadius x:Key="LomaButtonRadius">6</CornerRadius>
+    <CornerRadius x:Key="LomaBadgeRadius">4</CornerRadius>
 
     <!-- 字号阶梯 -->
     <x:Double x:Key="LomaFontSizeSection">15</x:Double>
@@ -756,20 +756,19 @@
                                      贴齐井口自己的圆角（Margin 不再留 2px），
                                      否则井口边缘会露出一条底色细缝，
                                      看着像框外又描了一道线。
-                                     高度必须 ≥ 圆角半径：6px 高的带子套 12 的
-                                     圆角，两道弧各占 12px 却只有 6px 可用，
-                                     填充会被压没，整条阴影直接消失。 -->
+                                     高度必须 ≥ 圆角半径：12px 高的带子套 6 的
+                                     圆角，弧线占位不超过 6px，填充完整可见。 -->
                                 <Border
                                     Height="12"
                                     VerticalAlignment="Top"
-                                    CornerRadius="12,12,0,0"
+                                    CornerRadius="6,6,0,0"
                                     Background="{ThemeResource LomaWellShade}"
                                     IsHitTestVisible="False" />
                                 <!-- 井口底部反弹光：下亮上无，渐亮而非一块亮片 -->
                                 <Border
                                     Height="12"
                                     VerticalAlignment="Bottom"
-                                    CornerRadius="0,0,12,12"
+                                    CornerRadius="0,0,6,6"
                                     Background="{ThemeResource LomaWellLip}"
                                     IsHitTestVisible="False" />
                                 <ContentPresenter
@@ -936,7 +935,7 @@
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Foreground" Value="{ThemeResource LomaInkSecondary}" />
@@ -1020,7 +1019,7 @@
     -->
     <Style TargetType="TextBox">
         <Setter Property="MinHeight" Value="36" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="6" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="12,8" />
         <Setter Property="Foreground" Value="{ThemeResource LomaInk}" />
@@ -1139,7 +1138,7 @@
         <Setter Property="Background" Value="{ThemeResource LomaRaised}" />
         <Setter Property="Foreground" Value="{ThemeResource LomaInk}" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="CornerRadius" Value="4" />
         <Setter Property="Padding" Value="10,6" />
         <Setter Property="FontSize" Value="{StaticResource LomaFontSizeCaption}" />
     </Style>
