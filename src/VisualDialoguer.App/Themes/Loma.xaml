@@ -1,0 +1,1219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「Loma」— VisualDialoguer 轻拟物（Soft Neumorphism）主题。
+
+  设计立意：把编辑器变成一块温润的实体材质——所有控件从同一块"面团"里
+  挤压出来，不靠描边、不靠对比色，只靠左上受光 + 右下投影的双向阴影
+  表达凹凸。整体氛围安静、柔软、专注，像用手指在一块暖灰色软泥上
+  按压出按钮和凹槽。
+
+  与 Paperstage 的区别：
+  · Paperstage 是"纸叠"——纸片之间靠明度差 + 发丝边分层；
+  · Loma 是"泥塑"——物体与背景几乎同色，靠双向阴影的方向与深浅表达
+    凸起 / 凹陷 / 按下 / 浮起，没有描边线。
+
+  实现要点：
+  1. 覆写全部框架语义键（Button* / TextControl* / ListViewItem* 等），
+     原生控件自动跟着 Loma 调色板走；
+  2. 自定义 LomaRaised / LomaSunken / LomaButton / LomaIconButton
+     四个模板，用"双层偏移 Border"模拟软阴影，无需任何第三方库；
+  3. 双主题（Light / Dark）共用同一套视觉语汇，只是明暗反转。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════ 日间 Light ═══════════════ -->
+        <ResourceDictionary x:Key="Light">
+
+            <!-- ── 材质底色：所有凹凸都从这块"面团"上长出来 ── -->
+            <!-- 桌面底色：暖灰，像一块磨砂石材台面 -->
+            <Color x:Key="LomaBaseColor">#DCD6D0</Color>
+            <!-- 凸起面：比底色亮一档，配合左上高光形成"浮起"感 -->
+            <Color x:Key="LomaRaisedColor">#EFEAE5</Color>
+            <!-- 凸起面顶部受光极限：纯白高光的最亮处 -->
+            <Color x:Key="LomaRaisedTopColor">#F8F5F1</Color>
+            <!-- 凸条（工具栏/状态栏）专用面：上缘受光，下缘转向背光 -->
+            <Color x:Key="LomaBarTopColor">#F6F2ED</Color>
+            <Color x:Key="LomaBarBottomColor">#E9E4DE</Color>
+            <!-- 凸条上棱：受光的那一条亮边 -->
+            <Color x:Key="LomaBarRimColor">#FCFAF8</Color>
+            <!-- 凹陷面：比底色暗，配合内阴影形成"压下去"感 -->
+            <Color x:Key="LomaSunkenColor">#C8C2BA</Color>
+            <!-- 凹陷面底部：最暗处 -->
+            <Color x:Key="LomaSunkenDeepColor">#BFB9B1</Color>
+
+            <!-- ── 双向阴影色 ── -->
+            <!-- 暗部投影：暖灰，半透明，右下方向 -->
+            <Color x:Key="LomaShadowDarkColor">#3D3528</Color>
+            <!-- 暗部投影透明度：关键参数，越大越"厚" -->
+            <Color x:Key="LomaShadowDarkSoftColor">#223D3528</Color>
+            <Color x:Key="LomaShadowDarkDeepColor">#403D3528</Color>
+            <!-- 亮部高光：纯白，左上方向 -->
+            <Color x:Key="LomaShadowLightColor">#CCFFFFFF</Color>
+            <Color x:Key="LomaShadowLightSoftColor">#80FFFFFF</Color>
+            <!-- 环境影：更淡更大的一层，让卡片真正离开桌面 -->
+            <Color x:Key="LomaShadowAmbientColor">#0E3D3528</Color>
+
+            <!-- 发丝边：Loma 原则上不用边框，但流程图代码和标题栏需要一个值 -->
+            <Color x:Key="LomaEdgeColor">#CFC9C0</Color>
+            <Color x:Key="LomaEdgeStrongColor">#B5AFA6</Color>
+            <!-- 输入框未聚焦时的可见边：比凹陷面略深，保证用户能找到输入框 -->
+            <Color x:Key="LomaFieldEdgeColor">#B2ABA2</Color>
+
+            <!-- ── 文字三级（暖墨色，不用纯黑）── -->
+            <Color x:Key="LomaInkColor">#3F3A35</Color>
+            <Color x:Key="LomaInkSecondaryColor">#6B645B</Color>
+            <Color x:Key="LomaInkTertiaryColor">#948D82</Color>
+
+            <!-- ── 签名色：鼠尾草绿（安静、专注、温润）── -->
+            <!-- 主色：低饱和鼠尾草，用于主操作、选中态、聚焦框 -->
+            <Color x:Key="LomaAccentColor">#6E8F82</Color>
+            <Color x:Key="LomaAccentHoverColor">#82A395</Color>
+            <Color x:Key="LomaAccentPressedColor">#5C7D70</Color>
+            <!-- 淡染：选中行、悬停层的底色 -->
+            <Color x:Key="LomaAccentWashColor">#1F6E8F82</Color>
+            <Color x:Key="LomaAccentEdgeColor">#4D6E8F82</Color>
+            <!-- 压在实底 accent 上的字 -->
+            <Color x:Key="LomaOnAccentColor">#F5F2EE</Color>
+
+            <!-- ── 交互态填充 ── -->
+            <!-- 悬停：比凸起面略亮一点，没有对比色跳跃 -->
+            <Color x:Key="LomaHoverColor">#F0EDE8</Color>
+            <!-- 按下：压进凹陷面 -->
+            <Color x:Key="LomaPressedColor">#CFCAC2</Color>
+            <!-- 禁用：平放在底色上，推不动 -->
+            <Color x:Key="LomaDisabledColor">#DCD8D2</Color>
+            <!-- 遮罩：暖黑 -->
+            <Color x:Key="LomaScrimColor">#4D2A241E</Color>
+
+            <!-- ── 流程图画布 ── -->
+            <Color x:Key="LomaGraphDeskColor">#E0DCD6</Color>
+            <Color x:Key="LomaGraphGridColor">#147A7268</Color>
+            <Color x:Key="LomaThreadColor">#8A8378</Color>
+
+            <!-- ── 8 种指令语义色（与 Paperstage 同源，但统一压柔半档）── -->
+            <Color x:Key="LomaKindSpeakerColor">#5A8AA0</Color>
+            <Color x:Key="LomaKindLineColor">#8478A8</Color>
+            <Color x:Key="LomaKindChoiceColor">#B5705A</Color>
+            <Color x:Key="LomaKindGotoColor">#A08040</Color>
+            <Color x:Key="LomaKindSetColor">#6A9070</Color>
+            <Color x:Key="LomaKindClearColor">#807868</Color>
+            <Color x:Key="LomaKindEmitColor">#A86890</Color>
+            <Color x:Key="LomaKindEndColor">#605A54</Color>
+            <Color x:Key="LomaBadgeInkColor">#F5F2EE</Color>
+
+            <!-- ═══════════════ 画刷令牌 ═══════════════ -->
+            <SolidColorBrush x:Key="LomaBase" Color="{StaticResource LomaBaseColor}" />
+            <SolidColorBrush x:Key="LomaRaised" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="LomaRaisedTop" Color="{StaticResource LomaRaisedTopColor}" />
+            <SolidColorBrush x:Key="LomaSunken" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="LomaSunkenDeep" Color="{StaticResource LomaSunkenDeepColor}" />
+
+            <SolidColorBrush x:Key="LomaShadowDark" Color="{StaticResource LomaShadowDarkSoftColor}" />
+            <SolidColorBrush x:Key="LomaShadowDarkDeep" Color="{StaticResource LomaShadowDarkDeepColor}" />
+            <SolidColorBrush x:Key="LomaShadowLight" Color="{StaticResource LomaShadowLightSoftColor}" />
+            <SolidColorBrush x:Key="LomaShadowAmbient" Color="{StaticResource LomaShadowAmbientColor}" />
+
+            <!-- 凸条投在桌面上的影：贴条的那一端最深，向外迅速淡出。
+                 只能画在条的"外面"——画在条内侧就会变成一条悬空的硬缝，
+                 凸条立刻塌成一张贴纸。 -->
+            <LinearGradientBrush x:Key="LomaEdgeShadowDown" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#3B3D3528" Offset="0" />
+                <GradientStop Color="#1E3D3528" Offset="0.35" />
+                <GradientStop Color="#003D3528" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="LomaEdgeShadowUp" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#003D3528" Offset="0" />
+                <GradientStop Color="#1E3D3528" Offset="0.65" />
+                <GradientStop Color="#3B3D3528" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- ── 凸条（工具栏 / 状态栏）的立体构造 ──
+                 和卡片同一套光影：光源在左上，条面顶亮底暗。
+                 渐变刻意在顶部 15% 内跑完大半落差——那一段对应条子的圆角
+                 上缘受光，跑得慢就成了一片线性色带，看着还是贴纸。
+                 下半段只留很轻的压暗，交代条面朝下转折。
+                 投影必须画在条"外面"：贴条那端最深，向外淡出。 -->
+            <LinearGradientBrush x:Key="LomaBarFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource LomaBarTopColor}" Offset="0" />
+                <GradientStop Color="{StaticResource LomaRaisedColor}" Offset="0.15" />
+                <GradientStop Color="{StaticResource LomaRaisedColor}" Offset="0.72" />
+                <GradientStop Color="{StaticResource LomaBarBottomColor}" Offset="1" />
+            </LinearGradientBrush>
+            <!-- 上棱：一像素亮线，交代光源来自左上 -->
+            <SolidColorBrush x:Key="LomaBarRim" Color="{StaticResource LomaBarRimColor}" />
+
+            <SolidColorBrush x:Key="LomaEdge" Color="{StaticResource LomaEdgeColor}" />
+            <SolidColorBrush x:Key="LomaEdgeStrong" Color="{StaticResource LomaEdgeStrongColor}" />
+
+            <SolidColorBrush x:Key="LomaInk" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="LomaInkSecondary" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="LomaInkTertiary" Color="{StaticResource LomaInkTertiaryColor}" />
+
+            <SolidColorBrush x:Key="LomaAccent" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="LomaAccentHover" Color="{StaticResource LomaAccentHoverColor}" />
+            <SolidColorBrush x:Key="LomaAccentPressed" Color="{StaticResource LomaAccentPressedColor}" />
+            <SolidColorBrush x:Key="LomaAccentWash" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="LomaAccentEdge" Color="{StaticResource LomaAccentEdgeColor}" />
+            <SolidColorBrush x:Key="LomaOnAccent" Color="{StaticResource LomaOnAccentColor}" />
+
+            <SolidColorBrush x:Key="LomaHover" Color="{StaticResource LomaHoverColor}" />
+            <SolidColorBrush x:Key="LomaPressed" Color="{StaticResource LomaPressedColor}" />
+            <SolidColorBrush x:Key="LomaDisabled" Color="{StaticResource LomaDisabledColor}" />
+            <SolidColorBrush x:Key="LomaScrim" Color="{StaticResource LomaScrimColor}" />
+
+            <SolidColorBrush x:Key="LomaGraphDesk" Color="{StaticResource LomaGraphDeskColor}" />
+            <SolidColorBrush x:Key="LomaGraphGrid" Color="{StaticResource LomaGraphGridColor}" />
+            <SolidColorBrush x:Key="LomaThread" Color="{StaticResource LomaThreadColor}" />
+
+            <SolidColorBrush x:Key="LomaKindSpeaker" Color="{StaticResource LomaKindSpeakerColor}" />
+            <SolidColorBrush x:Key="LomaKindLine" Color="{StaticResource LomaKindLineColor}" />
+            <SolidColorBrush x:Key="LomaKindChoice" Color="{StaticResource LomaKindChoiceColor}" />
+            <SolidColorBrush x:Key="LomaKindGoto" Color="{StaticResource LomaKindGotoColor}" />
+            <SolidColorBrush x:Key="LomaKindSet" Color="{StaticResource LomaKindSetColor}" />
+            <SolidColorBrush x:Key="LomaKindClear" Color="{StaticResource LomaKindClearColor}" />
+            <SolidColorBrush x:Key="LomaKindEmit" Color="{StaticResource LomaKindEmitColor}" />
+            <SolidColorBrush x:Key="LomaKindEnd" Color="{StaticResource LomaKindEndColor}" />
+            <SolidColorBrush x:Key="LomaBadgeInk" Color="{StaticResource LomaBadgeInkColor}" />
+
+            <!-- ── 卡面渐变：顶部受光 → 底色，模拟材质顶部的光反射 ── -->
+            <LinearGradientBrush x:Key="LomaCardFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource LomaRaisedTopColor}" Offset="0" />
+                <GradientStop Color="{StaticResource LomaRaisedColor}" Offset="0.6" />
+                <GradientStop Color="{StaticResource LomaBaseColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- ── 凹陷面：**整块平色**，就取桌面底色。
+                 以前这里是 深凹→浅凹→底色 的整幅竖向渐变，问题在于这条渐变
+                 会横穿输入框自己的面色（LomaSunkenColor）：
+                 井口上半段比框面深、下半段比框面浅，于是同一个输入框
+                 在上沿显得"凸起"、在下沿显得"凹陷"——一条边界两种语义，
+                 这就是"输入框和背景容器边界不自然"的根源。
+                 凹槽的深度改由上下两条窄带（顶影 / 底反光）交代，
+                 这也正是轻拟物凹陷的标准做法：面不变，只靠壁上的光影。 -->
+            <SolidColorBrush x:Key="LomaWellFace" Color="{StaticResource LomaBaseColor}" />
+
+            <!-- ── 凹陷顶部内阴影：上深下无，让井口边缘暗下去。
+                 结束色必须是**自身颜色的全透明版**（#00RRGGBB）。
+                 这里原本写的是 #00FFFFFF（透明白），而 WinUI 的渐变按非预乘
+                 方式插值：中段颜色会一路朝白色漂，于是顶影淡出处浮出一圈
+                 **亮的** 白边。深色主题下尤其刺眼——黑边下面紧接一条亮带，
+                 整个井口看着像用马克笔描了两道线。 ── -->
+            <LinearGradientBrush x:Key="LomaWellShade" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource LomaShadowDarkDeepColor}" Offset="0" />
+                <GradientStop Color="#003D3528" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- ── 井口底缘的反弹光：往下渐亮，最亮处在井口的近底边上。
+                 两端都是白色，所以这里用 #00FFFFFF 当透明端是安全的
+                 （会漂色的只有"深色 → 透明白"这种跨色相的渐变）。 ── -->
+            <LinearGradientBrush x:Key="LomaWellLip" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#00FFFFFF" Offset="0" />
+                <GradientStop Color="{StaticResource LomaShadowLightColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- ═══════════════ 框架语义键覆写 ═══════════════ -->
+
+            <!-- 按钮：凸起 → 悬停更亮 → 按下凹陷 -->
+            <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource LomaRaisedTopColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="{StaticResource LomaDisabledColor}" />
+            <!-- Loma 不靠描边分边界，按钮无边框，阴影自己说话 -->
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource LomaAccentEdgeColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource LomaInkTertiaryColor}" />
+
+            <!-- 文本框：下沉井口，聚焦时浮起一圈 accent 色 -->
+            <CornerRadius x:Key="TextControlCornerRadius">10</CornerRadius>
+            <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource LomaSunkenDeepColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
+            <!-- 输入框未聚焦发丝边（自定义模板用） -->
+            <SolidColorBrush x:Key="LomaFieldEdge" Color="{StaticResource LomaFieldEdgeColor}" />
+            <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlButtonForeground" Color="{StaticResource LomaInkSecondaryColor}" />
+
+            <!-- 下拉框 -->
+            <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource LomaSunkenDeepColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{StaticResource LomaAccentEdgeColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="{StaticResource LomaFieldEdgeColor}" />
+            <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource LomaHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource LomaAccentWashColor}" />
+
+            <!-- 列表项：悬停是微亮层，选中是淡染 accent -->
+            <SolidColorBrush x:Key="ListViewItemForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="{StaticResource LomaHoverColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="{StaticResource LomaPressedColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemRevealBorderBrush" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPointerOverBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPressedBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorDisabledBrush" Color="Transparent" />
+
+            <!-- 命令栏按钮：平时透明，悬停浮出一层 -->
+            <SolidColorBrush x:Key="AppBarButtonBackground" Color="#00000000" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPointerOver" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPressed" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForeground" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPointerOver" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPressed" Color="{StaticResource LomaAccentPressedColor}" />
+
+            <!-- 通用填充与文字令牌 -->
+            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDisabledBrush" Color="{StaticResource LomaDisabledColor}" />
+            <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="{StaticResource LomaBaseColor}" />
+            <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="Transparent" />
+
+            <!-- 焦点框：鼠尾草绿 -->
+            <SolidColorBrush x:Key="SystemControlFocusVisualPrimaryBrush" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="SystemControlFocusVisualSecondaryBrush" Color="{StaticResource LomaRaisedTopColor}" />
+            <SolidColorBrush x:Key="SystemAccentColorLight1" Color="{StaticResource LomaAccentHoverColor}" />
+
+            <!-- 主操作按钮（AccentButtonStyle）：实底鼠尾草 -->
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="{StaticResource LomaAccentHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="{StaticResource LomaAccentPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource LomaOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="{StaticResource LomaOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="{StaticResource LomaOnAccentColor}" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="{StaticResource LomaOnAccentColor}" />
+
+            <!-- 提示气泡：浮起的小块 -->
+            <SolidColorBrush x:Key="ToolTipBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ToolTipForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ToolTipBorderBrush" Color="Transparent" />
+
+            <!-- 对话框 -->
+            <SolidColorBrush x:Key="ContentDialogBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="{StaticResource LomaShadowDarkSoftColor}" />
+            <SolidColorBrush x:Key="ContentDialogSmokeFill" Color="{StaticResource LomaScrimColor}" />
+
+            <!-- 滚动条：柔和存在 -->
+            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="Transparent" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackground" Color="Transparent" />
+
+            <!-- 菜单浮层 -->
+            <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="{StaticResource LomaHoverColor}" />
+
+            <!-- 分隔线 -->
+            <SolidColorBrush x:Key="AppBarSeparatorForeground" Color="{StaticResource LomaShadowDarkSoftColor}" />
+
+            <!-- 文本选区 -->
+            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{StaticResource LomaAccentEdgeColor}" />
+        </ResourceDictionary>
+
+        <!-- ═══════════════ 夜间 Dark ═══════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- 材质底色：深暖灰，像一块磨砂深色石材 -->
+            <Color x:Key="LomaBaseColor">#242220</Color>
+            <Color x:Key="LomaRaisedColor">#363330</Color>
+            <Color x:Key="LomaRaisedTopColor">#403D3A</Color>
+            <!-- 凸条专用面：暗底上同样上亮下暗，靠亮度差而非绝对值 -->
+            <Color x:Key="LomaBarTopColor">#3F3C39</Color>
+            <Color x:Key="LomaBarBottomColor">#2D2A28</Color>
+            <!-- 凸条上棱：暗底上的受光亮边 -->
+            <Color x:Key="LomaBarRimColor">#4C4946</Color>
+            <Color x:Key="LomaSunkenColor">#1A1816</Color>
+            <Color x:Key="LomaSunkenDeepColor">#141210</Color>
+
+            <!-- 双向阴影：暗底上高光变弱、投影变黑 -->
+            <Color x:Key="LomaShadowDarkColor">#000000</Color>
+            <Color x:Key="LomaShadowDarkSoftColor">#40000000</Color>
+            <Color x:Key="LomaShadowDarkDeepColor">#66000000</Color>
+            <Color x:Key="LomaShadowLightColor">#14FFFFFF</Color>
+            <Color x:Key="LomaShadowLightSoftColor">#18FFFFFF</Color>
+            <Color x:Key="LomaShadowAmbientColor">#24000000</Color>
+
+            <!-- 发丝边：暗底上的边 -->
+            <Color x:Key="LomaEdgeColor">#3A3835</Color>
+            <Color x:Key="LomaEdgeStrongColor">#4E4B47</Color>
+            <!-- 输入框未聚焦时的可见边：比凹陷面更深的一道刻线。
+                 浅色主题用"暗于框底"表达凹槽的近边阴影；暗色主题必须同一套
+                 语言——先前这根线比框底还亮（#46433F），空字段看着像个
+                 发光的空心框，跟整屏的阴影语言打架。 -->
+            <Color x:Key="LomaFieldEdgeColor">#0E0D0C</Color>
+
+            <!-- 文字三级：暖白 -->
+            <Color x:Key="LomaInkColor">#E8E4DF</Color>
+            <Color x:Key="LomaInkSecondaryColor">#B0AAA3</Color>
+            <Color x:Key="LomaInkTertiaryColor">#8A837A</Color>
+
+            <!-- 签名色：鼠尾草绿提亮一档 -->
+            <Color x:Key="LomaAccentColor">#8FB8A8</Color>
+            <Color x:Key="LomaAccentHoverColor">#A5C8B8</Color>
+            <Color x:Key="LomaAccentPressedColor">#7BA896</Color>
+            <Color x:Key="LomaAccentWashColor">#268FB8A8</Color>
+            <Color x:Key="LomaAccentEdgeColor">#598FB8A8</Color>
+            <Color x:Key="LomaOnAccentColor">#1E1C1A</Color>
+
+            <!-- 交互态 -->
+            <Color x:Key="LomaHoverColor">#383633</Color>
+            <Color x:Key="LomaPressedColor">#141210</Color>
+            <Color x:Key="LomaDisabledColor">#242220</Color>
+            <Color x:Key="LomaScrimColor">#99000000</Color>
+
+            <!-- 流程图画布 -->
+            <Color x:Key="LomaGraphDeskColor">#242220</Color>
+            <Color x:Key="LomaGraphGridColor">#14FFFFFF</Color>
+            <Color x:Key="LomaThreadColor">#7A7368</Color>
+
+            <!-- 8 种指令语义色：暗底提亮 -->
+            <Color x:Key="LomaKindSpeakerColor">#7CB2CD</Color>
+            <Color x:Key="LomaKindLineColor">#AC9AD6</Color>
+            <Color x:Key="LomaKindChoiceColor">#D49080</Color>
+            <Color x:Key="LomaKindGotoColor">#DFB068</Color>
+            <Color x:Key="LomaKindSetColor">#82B890</Color>
+            <Color x:Key="LomaKindClearColor">#A49B8E</Color>
+            <Color x:Key="LomaKindEmitColor">#CE88B8</Color>
+            <Color x:Key="LomaKindEndColor">#9A948B</Color>
+            <Color x:Key="LomaBadgeInkColor">#1E1C1A</Color>
+
+            <!-- ── 画刷令牌 ── -->
+            <SolidColorBrush x:Key="LomaBase" Color="{StaticResource LomaBaseColor}" />
+            <SolidColorBrush x:Key="LomaRaised" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="LomaRaisedTop" Color="{StaticResource LomaRaisedTopColor}" />
+            <SolidColorBrush x:Key="LomaSunken" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="LomaSunkenDeep" Color="{StaticResource LomaSunkenDeepColor}" />
+
+            <SolidColorBrush x:Key="LomaShadowDark" Color="{StaticResource LomaShadowDarkSoftColor}" />
+            <SolidColorBrush x:Key="LomaShadowDarkDeep" Color="{StaticResource LomaShadowDarkDeepColor}" />
+            <SolidColorBrush x:Key="LomaShadowLight" Color="{StaticResource LomaShadowLightSoftColor}" />
+            <SolidColorBrush x:Key="LomaShadowAmbient" Color="{StaticResource LomaShadowAmbientColor}" />
+
+            <!-- 凸条投在桌面上的影：暗底上影更黑、扩散更短 -->
+            <LinearGradientBrush x:Key="LomaEdgeShadowDown" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#66000000" Offset="0" />
+                <GradientStop Color="#33000000" Offset="0.35" />
+                <GradientStop Color="#00000000" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="LomaEdgeShadowUp" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#00000000" Offset="0" />
+                <GradientStop Color="#33000000" Offset="0.65" />
+                <GradientStop Color="#66000000" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- 凸条的立体构造：面渐变（顶部 15% 内跑完上缘受光）+ 画在条外的投影 -->
+            <LinearGradientBrush x:Key="LomaBarFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource LomaBarTopColor}" Offset="0" />
+                <GradientStop Color="{StaticResource LomaRaisedColor}" Offset="0.15" />
+                <GradientStop Color="{StaticResource LomaRaisedColor}" Offset="0.72" />
+                <GradientStop Color="{StaticResource LomaBarBottomColor}" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="LomaBarRim" Color="{StaticResource LomaBarRimColor}" />
+
+            <SolidColorBrush x:Key="LomaEdge" Color="{StaticResource LomaEdgeColor}" />
+            <SolidColorBrush x:Key="LomaEdgeStrong" Color="{StaticResource LomaEdgeStrongColor}" />
+
+            <SolidColorBrush x:Key="LomaInk" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="LomaInkSecondary" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="LomaInkTertiary" Color="{StaticResource LomaInkTertiaryColor}" />
+
+            <SolidColorBrush x:Key="LomaAccent" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="LomaAccentHover" Color="{StaticResource LomaAccentHoverColor}" />
+            <SolidColorBrush x:Key="LomaAccentPressed" Color="{StaticResource LomaAccentPressedColor}" />
+            <SolidColorBrush x:Key="LomaAccentWash" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="LomaAccentEdge" Color="{StaticResource LomaAccentEdgeColor}" />
+            <SolidColorBrush x:Key="LomaOnAccent" Color="{StaticResource LomaOnAccentColor}" />
+
+            <SolidColorBrush x:Key="LomaHover" Color="{StaticResource LomaHoverColor}" />
+            <SolidColorBrush x:Key="LomaPressed" Color="{StaticResource LomaPressedColor}" />
+            <SolidColorBrush x:Key="LomaDisabled" Color="{StaticResource LomaDisabledColor}" />
+            <SolidColorBrush x:Key="LomaScrim" Color="{StaticResource LomaScrimColor}" />
+
+            <SolidColorBrush x:Key="LomaGraphDesk" Color="{StaticResource LomaGraphDeskColor}" />
+            <SolidColorBrush x:Key="LomaGraphGrid" Color="{StaticResource LomaGraphGridColor}" />
+            <SolidColorBrush x:Key="LomaThread" Color="{StaticResource LomaThreadColor}" />
+
+            <SolidColorBrush x:Key="LomaKindSpeaker" Color="{StaticResource LomaKindSpeakerColor}" />
+            <SolidColorBrush x:Key="LomaKindLine" Color="{StaticResource LomaKindLineColor}" />
+            <SolidColorBrush x:Key="LomaKindChoice" Color="{StaticResource LomaKindChoiceColor}" />
+            <SolidColorBrush x:Key="LomaKindGoto" Color="{StaticResource LomaKindGotoColor}" />
+            <SolidColorBrush x:Key="LomaKindSet" Color="{StaticResource LomaKindSetColor}" />
+            <SolidColorBrush x:Key="LomaKindClear" Color="{StaticResource LomaKindClearColor}" />
+            <SolidColorBrush x:Key="LomaKindEmit" Color="{StaticResource LomaKindEmitColor}" />
+            <SolidColorBrush x:Key="LomaKindEnd" Color="{StaticResource LomaKindEndColor}" />
+            <SolidColorBrush x:Key="LomaBadgeInk" Color="{StaticResource LomaBadgeInkColor}" />
+
+            <LinearGradientBrush x:Key="LomaCardFace" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource LomaRaisedTopColor}" Offset="0" />
+                <GradientStop Color="{StaticResource LomaRaisedColor}" Offset="0.6" />
+                <GradientStop Color="{StaticResource LomaBaseColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- 凹陷面：平色（理由同浅色主题的 LomaWellFace 注释——
+                 整幅渐变的底面会横穿输入框自己的面色，让同一条边界
+                 在上沿"凸"、下沿"凹"）。 -->
+            <SolidColorBrush x:Key="LomaWellFace" Color="{StaticResource LomaBaseColor}" />
+
+            <!-- 顶部内阴影：结束色用自身颜色的全透明版。
+                 #00FFFFFF（透明白）会在淡出处漂出一圈亮边，与上面的黑边
+                 拼成"描边"的观感。 -->
+            <LinearGradientBrush x:Key="LomaWellShade" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="{StaticResource LomaShadowDarkDeepColor}" Offset="0" />
+                <GradientStop Color="#00000000" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- 井口底缘反弹光：两端同为白色，透明端用 #00FFFFFF 不会漂色 -->
+            <LinearGradientBrush x:Key="LomaWellLip" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#00FFFFFF" Offset="0" />
+                <GradientStop Color="{StaticResource LomaShadowLightColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- ── 框架语义键覆写 ── -->
+
+            <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource LomaRaisedTopColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="{StaticResource LomaDisabledColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource LomaAccentEdgeColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource LomaInkTertiaryColor}" />
+
+            <CornerRadius x:Key="TextControlCornerRadius">10</CornerRadius>
+            <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource LomaSunkenDeepColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
+            <!-- 输入框未聚焦发丝边（自定义模板用） -->
+            <SolidColorBrush x:Key="LomaFieldEdge" Color="{StaticResource LomaFieldEdgeColor}" />
+            <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextControlButtonForeground" Color="{StaticResource LomaInkSecondaryColor}" />
+
+            <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource LomaSunkenDeepColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{StaticResource LomaAccentEdgeColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="{StaticResource LomaFieldEdgeColor}" />
+            <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource LomaHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource LomaAccentWashColor}" />
+
+            <SolidColorBrush x:Key="ListViewItemForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="{StaticResource LomaHoverColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="{StaticResource LomaPressedColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="ListViewItemRevealBorderBrush" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPointerOverBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPressedBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ListViewItemSelectionIndicatorDisabledBrush" Color="Transparent" />
+
+            <SolidColorBrush x:Key="AppBarButtonBackground" Color="#00000000" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPointerOver" Color="{StaticResource LomaAccentWashColor}" />
+            <SolidColorBrush x:Key="AppBarButtonBackgroundPressed" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForeground" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPointerOver" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="AppBarButtonForegroundPressed" Color="{StaticResource LomaAccentPressedColor}" />
+
+            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="{StaticResource LomaSunkenColor}" />
+            <SolidColorBrush x:Key="ControlFillColorDisabledBrush" Color="{StaticResource LomaDisabledColor}" />
+            <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="{StaticResource LomaBaseColor}" />
+            <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="Transparent" />
+
+            <SolidColorBrush x:Key="SystemControlFocusVisualPrimaryBrush" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="SystemControlFocusVisualSecondaryBrush" Color="{StaticResource LomaRaisedTopColor}" />
+            <SolidColorBrush x:Key="SystemAccentColorLight1" Color="{StaticResource LomaAccentHoverColor}" />
+
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource LomaAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="{StaticResource LomaAccentHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="{StaticResource LomaAccentPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource LomaOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="{StaticResource LomaOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="{StaticResource LomaOnAccentColor}" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="{StaticResource LomaOnAccentColor}" />
+
+            <SolidColorBrush x:Key="ToolTipBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ToolTipForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ToolTipBorderBrush" Color="Transparent" />
+
+            <SolidColorBrush x:Key="ContentDialogBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="{StaticResource LomaShadowDarkSoftColor}" />
+            <SolidColorBrush x:Key="ContentDialogSmokeFill" Color="{StaticResource LomaScrimColor}" />
+
+            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="{StaticResource LomaInkTertiaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="{StaticResource LomaInkSecondaryColor}" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="Transparent" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackground" Color="Transparent" />
+
+            <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="{StaticResource LomaRaisedColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="{StaticResource LomaInkColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="{StaticResource LomaHoverColor}" />
+
+            <SolidColorBrush x:Key="AppBarSeparatorForeground" Color="{StaticResource LomaShadowDarkSoftColor}" />
+            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{StaticResource LomaAccentEdgeColor}" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- ═══════════ 主题无关：圆角、尺度、排版 ═══════════ -->
+
+    <!-- Loma 的核心：大圆角。所有控件统一 12px 起，卡片 16px，让边缘像
+         被手指揉过一样圆润，没有锋利的直角。 -->
+    <CornerRadius x:Key="ControlCornerRadius">12</CornerRadius>
+    <CornerRadius x:Key="OverlayCornerRadius">16</CornerRadius>
+
+    <CornerRadius x:Key="LomaCardRadius">16</CornerRadius>
+    <CornerRadius x:Key="LomaWellRadius">12</CornerRadius>
+    <CornerRadius x:Key="LomaButtonRadius">12</CornerRadius>
+    <CornerRadius x:Key="LomaBadgeRadius">8</CornerRadius>
+
+    <!-- 字号阶梯 -->
+    <x:Double x:Key="LomaFontSizeSection">15</x:Double>
+    <x:Double x:Key="LomaFontSizeBody">14</x:Double>
+    <x:Double x:Key="LomaFontSizeCaption">12</x:Double>
+    <x:Double x:Key="LomaFontSizeBadge">12</x:Double>
+    <x:Double x:Key="LomaBadgeSize">24</x:Double>
+
+    <!-- 间距阶梯 -->
+    <x:Double x:Key="LomaSpaceS">6</x:Double>
+    <x:Double x:Key="LomaSpaceM">10</x:Double>
+    <x:Double x:Key="LomaSpaceL">16</x:Double>
+
+    <!-- Padding -->
+    <Thickness x:Key="LomaPadCard">16</Thickness>
+    <Thickness x:Key="LomaPadBanner">16,10</Thickness>
+    <Thickness x:Key="LomaPadStatusBar">16,8</Thickness>
+    <Thickness x:Key="LomaPadRow">0,4</Thickness>
+    <Thickness x:Key="LomaPadButton">16,8</Thickness>
+
+    <!-- ═══════════ 组件样式 ═══════════ -->
+
+    <!-- 卡片标题 -->
+    <Style x:Key="LomaSectionTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource LomaFontSizeSection}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource LomaInk}" />
+    </Style>
+
+    <!-- 次要说明文字 -->
+    <Style x:Key="LomaCaption" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource LomaFontSizeCaption}" />
+        <Setter Property="Foreground" Value="{ThemeResource LomaInkSecondary}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!--
+      LomaRaised：凸起卡片。整个界面的基础单元。
+
+      轻拟物的核心技法——用四层叠出"从桌面上凸起来"的质感：
+        ① 右下暗投影（最底层）：比卡面大一圈，偏移右下，给出厚度；
+        ② 左上亮高光（第二层）：比卡面小一圈，偏移左上，模拟受光；
+        ③ 卡面本身：顶部受光渐变，与底色几乎同色；
+        ④ 内容层。
+
+      因为没有边框线，立体感完全靠这两层偏移的半透明色块撑出来。
+      光源统一来自左上，所有凸起物共用同一套光影方向。
+    -->
+    <Style x:Key="LomaCard" TargetType="ContentControl">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Grid>
+                        <!-- 外层环境影：大而淡，向四周铺开 -->
+                        <Border
+                            Margin="6,10,-6,-10"
+                            Background="{ThemeResource LomaShadowAmbient}"
+                            CornerRadius="{StaticResource LomaCardRadius}"
+                            IsHitTestVisible="False" />
+                        <!-- 内层接触影：贴边偏右下，给出厚度 -->
+                        <Border
+                            Margin="3,5,-3,-5"
+                            Background="{ThemeResource LomaShadowDarkDeep}"
+                            CornerRadius="{StaticResource LomaCardRadius}"
+                            IsHitTestVisible="False" />
+                        <!-- 左上亮高光 -->
+                        <Border
+                            Margin="-3,-5,3,5"
+                            Background="{ThemeResource LomaShadowLight}"
+                            CornerRadius="{StaticResource LomaCardRadius}"
+                            IsHitTestVisible="False" />
+                        <!-- 卡面 -->
+                        <Border
+                            Background="{ThemeResource LomaCardFace}"
+                            CornerRadius="{StaticResource LomaCardRadius}">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      LomaSunken：凹陷井口。属性面板的字段区。
+
+      与 LomaRaised 方向相反——顶部压暗、底部受光，一眼看出是"凹进去"的。
+      模拟在软泥上按出一个坑：坑的内壁上方是阴影，下方反出一点光。
+    -->
+    <Style x:Key="LomaWell" TargetType="ContentControl">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Grid>
+                        <Border
+                            Background="{ThemeResource LomaWellFace}"
+                            CornerRadius="{StaticResource LomaWellRadius}">
+                            <Grid>
+                                <!-- 井口顶部内阴影：上深下无。
+                                     贴齐井口自己的圆角（Margin 不再留 2px），
+                                     否则井口边缘会露出一条底色细缝，
+                                     看着像框外又描了一道线。
+                                     高度必须 ≥ 圆角半径：6px 高的带子套 12 的
+                                     圆角，两道弧各占 12px 却只有 6px 可用，
+                                     填充会被压没，整条阴影直接消失。 -->
+                                <Border
+                                    Height="12"
+                                    VerticalAlignment="Top"
+                                    CornerRadius="12,12,0,0"
+                                    Background="{ThemeResource LomaWellShade}"
+                                    IsHitTestVisible="False" />
+                                <!-- 井口底部反弹光：下亮上无，渐亮而非一块亮片 -->
+                                <Border
+                                    Height="12"
+                                    VerticalAlignment="Bottom"
+                                    CornerRadius="0,0,12,12"
+                                    Background="{ThemeResource LomaWellLip}"
+                                    IsHitTestVisible="False" />
+                                <ContentPresenter
+                                    Margin="{TemplateBinding Padding}"
+                                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      LomaButton：标准按钮——一块凸起的软泥块。
+
+      三态靠阴影方向和底色深浅表达，不靠边框：
+        · Normal   ：凸起，右下暗投影 + 左上亮高光
+        · PointerOver：高光加强，略亮
+        · Pressed  ：反转阴影方向（暗投影移到左上、高光移到右下），
+                     同时底色压暗——视觉上像被按进了桌面
+        · Disabled ：所有阴影消失，平放在桌面上
+
+      这个模板完整重画了按钮的视觉，不依赖框架默认的 BorderBrush。
+    -->
+    <Style x:Key="LomaButton" TargetType="Button">
+        <Setter Property="MinWidth" Value="88" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="{StaticResource LomaPadButton}" />
+        <Setter Property="CornerRadius" Value="{StaticResource LomaButtonRadius}" />
+        <Setter Property="Background" Value="{ThemeResource LomaRaised}" />
+        <Setter Property="Foreground" Value="{ThemeResource LomaInk}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="FocusVisualMargin" Value="-3" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <!-- 右下暗投影（凸起时可见，按下时隐藏） -->
+                        <Border
+                            x:Name="ShadowDark"
+                            Margin="2,4,-2,-4"
+                            Background="{ThemeResource LomaShadowDarkDeep}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False" />
+                        <!-- 左上亮高光（凸起时可见，按下时隐藏） -->
+                        <Border
+                            x:Name="ShadowLight"
+                            Margin="-2,-4,2,4"
+                            Background="{ThemeResource LomaShadowLight}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False" />
+                        <!-- 按下时的反向投影（左上暗） -->
+                        <Border
+                            x:Name="ShadowDarkInset"
+                            Margin="-2,-4,2,4"
+                            Background="{ThemeResource LomaShadowDarkDeep}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed" />
+                        <!-- 按下时的反向高光（右下亮） -->
+                        <Border
+                            x:Name="ShadowLightInset"
+                            Margin="2,4,-2,-4"
+                            Background="{ThemeResource LomaShadowLight}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed" />
+                        <!-- 按钮面 -->
+                        <Border
+                            x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                            <ContentPresenter
+                                x:Name="Content"
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaRaised}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInk}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDark" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaRaisedTop}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaAccent}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDark" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaSunken}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaAccentPressed}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <!-- 凸起阴影消失，凹陷阴影出现 -->
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDark" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaDisabled}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInkTertiary}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDark" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      LomaIconButton：工具栏图标按钮。平时是"看不见的一块"，
+      悬停才微微浮起一层，按下时凹陷。和 LomaButton 同语言，只是没有文字。
+    -->
+    <Style x:Key="LomaIconButton" TargetType="Button">
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource LomaInkSecondary}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="FocusVisualMargin" Value="-3" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid
+                        x:Name="Root"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Transparent" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInkSecondary}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaRaised}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInk}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaSunken}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaAccentPressed}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Transparent" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInkTertiary}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.4" Duration="0:0:0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <ContentPresenter
+                            x:Name="Content"
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            Foreground="{TemplateBinding Foreground}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      隐式 TextBox 样式（无 x:Key，应用到所有输入框）：
+        · 未聚焦：凹陷坑 + 一圈可见的发丝边（LomaFieldEdge），保证用户一眼能找到；
+        · 悬停：坑略加深；
+        · 聚焦：不画 accent 环——凹坑抬起、底色由凹陷转凸起，
+          边线仍是那根中性发丝边（聚焦是"这块地被拿起来"，不是"套上光晕"）；
+        · 禁用：平贴、弱化。
+      所有过渡都用 Opacity/Background 平滑交叉，不生硬跳变。
+    -->
+    <Style TargetType="TextBox">
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Foreground" Value="{ThemeResource LomaInk}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <!-- 凹陷内阴影：上沿压暗，给出"坑"的深度 -->
+                        <Border
+                            x:Name="InsetShadow"
+                            Margin="0,2,0,-2"
+                            Background="{ThemeResource LomaShadowDark}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False" />
+                        <!-- 凹陷面 -->
+                        <Border
+                            x:Name="BackgroundElement"
+                            Background="{ThemeResource TextControlBackground}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                            <Grid Padding="{TemplateBinding Padding}">
+                                <!-- 内容层：滚动条一律隐藏。
+                                     光标（caret）比正文高一两像素，滚动条因此会被
+                                     判定为"可滚动"；它一出现，24px 的期望高度
+                                     就会把 ScrollViewer 撑大，输入框跟着长高
+                                     （鼠标一悬停、光标一亮就"涨"一下）。
+                                     隐藏后 ScrollViewer 尺寸稳定，滚动仍可用。 -->
+                                <ScrollViewer
+                                    x:Name="ContentElement"
+                                    Padding="0"
+                                    HorizontalContentAlignment="Stretch"
+                                    VerticalContentAlignment="Stretch"
+                                    VerticalScrollBarVisibility="Hidden"
+                                    HorizontalScrollBarVisibility="Hidden" />
+                                <ContentPresenter
+                                    x:Name="PlaceholderTextContentPresenter"
+                                    Content="{TemplateBinding PlaceholderText}"
+                                    Foreground="{ThemeResource TextControlPlaceholderForeground}"
+                                    IsHitTestVisible="False"
+                                    Padding="0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                        <!-- 发丝边：聚焦时也留着，且始终是中性色。
+                             焦点提示不靠 accent 环，靠底色与坑深的变化。 -->
+                        <Border
+                            x:Name="EdgeElement"
+                            Background="Transparent"
+                            BorderBrush="{ThemeResource LomaFieldEdge}"
+                            BorderThickness="1"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False" />
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BackgroundElement" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlBackground}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BackgroundElement" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlBackgroundPointerOver}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="InsetShadow"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="1"
+                                            Duration="0:0:0.15" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BackgroundElement" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlBackgroundDisabled}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation Storyboard.TargetName="EdgeElement" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="InsetShadow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <VisualStateGroup x:Name="FocusStates">
+                                <!-- 未聚焦：不写故事板。基值即未聚焦外观
+                                     （EdgeElement Opacity=1、InsetShadow Opacity=1）。
+                                     离开 Focused 时框架撤掉聚焦动画，自动回到这些基值。 -->
+                                <VisualState x:Name="Unfocused" />
+                                <VisualState x:Name="Focused">
+                                    <Storyboard>
+                                        <!-- 聚焦不画任何 accent 环，只把坑抬起来：上沿压暗松开，像从井里抬起 -->
+                                        <DoubleAnimation Storyboard.TargetName="InsetShadow" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0:0:0.2" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BackgroundElement" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlBackgroundFocused}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      隐式 ToolTip：悬浮快捷键提示。
+      只覆写颜色/圆角/内边距，不换 ControlTemplate——保留框架默认的
+      锚定定位与自动消失逻辑。
+    -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{ThemeResource LomaRaised}" />
+        <Setter Property="Foreground" Value="{ThemeResource LomaInk}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="FontSize" Value="{StaticResource LomaFontSizeCaption}" />
+    </Style>
+
+    <!-- ═══════════ 列表行模板 ═══════════ -->
+
+    <!--
+      节点行：左侧一道"书脊"色条（入口节点为 accent），像案头立着的索引卡。
+      选中行整体染上 accent 淡色。
+    -->
+    <DataTemplate x:Key="LomaNodeRow">
+        <Grid ColumnSpacing="{StaticResource LomaSpaceM}" Padding="{StaticResource LomaPadRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Width="4"
+                Height="20"
+                CornerRadius="2"
+                Background="{Binding SpineBrush}" />
+            <TextBlock
+                Grid.Column="1"
+                Text="{Binding Id}"
+                FontSize="{StaticResource LomaFontSizeBody}"
+                VerticalAlignment="Center"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                Grid.Column="2"
+                Text="{Binding CountText}"
+                FontSize="{StaticResource LomaFontSizeCaption}"
+                Foreground="{ThemeResource LomaInkTertiary}"
+                VerticalAlignment="Center" />
+        </Grid>
+    </DataTemplate>
+
+    <!--
+      指令行：语义色徽章 + 摘要。徽章是一块微凸的小方块。
+    -->
+    <DataTemplate x:Key="LomaInstructionRow">
+        <Grid ColumnSpacing="10" Padding="{StaticResource LomaPadRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Width="{StaticResource LomaBadgeSize}"
+                Height="{StaticResource LomaBadgeSize}"
+                CornerRadius="{StaticResource LomaBadgeRadius}"
+                Background="{Binding KindBrush}">
+                <TextBlock
+                    Text="{Binding KindGlyph}"
+                    FontSize="{StaticResource LomaFontSizeBadge}"
+                    Foreground="{ThemeResource LomaBadgeInk}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock
+                    Text="{Binding SummaryText}"
+                    FontSize="{StaticResource LomaFontSizeBody}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Text="{Binding KindLabel}"
+                    FontSize="{StaticResource LomaFontSizeCaption}"
+                    Foreground="{ThemeResource LomaInkTertiary}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+</ResourceDictionary>

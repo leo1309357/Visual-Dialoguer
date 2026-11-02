@@ -1,38 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  指令属性面板 ·「稿台 Paperstage」
+  指令属性面板 ·「Loma」轻拟物
 
-  井口式设计：字段区整体下沉一层(PsWell)，输入框嵌在里面，
-  聚焦时被朱砂勾边浮起——呼应"批注"这个签名动作。
+  井口式设计：字段区整体下沉一层(LomaWell)，输入框嵌在里面，
+  聚焦时浮起一圈 accent 色。
 -->
 <UserControl
     x:Class="VisualDialoguer.App.Views.InstructionEditorPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <StackPanel Spacing="{StaticResource PsSpaceM}">
-        <TextBlock Text="属性" Style="{StaticResource PsSectionTitle}" />
+    <StackPanel Spacing="{StaticResource LomaSpaceM}">
+        <TextBlock Text="属性" Style="{StaticResource LomaSectionTitle}" />
 
         <ComboBox
             x:Name="TypeBox"
             Header="类型"
             HorizontalAlignment="Stretch"
+            UseSystemFocusVisuals="False"
             SelectionChanged="OnTypeChanged" />
 
-        <!-- 井口：下沉的字段区。没选中指令时整口收起来，
-             否则只剩一道 1px 边和一个 7px 的内阴影，看着像条多余的滚动条。 -->
-        <ContentControl x:Name="WellHost" Style="{StaticResource PsWell}">
+        <ContentControl x:Name="WellHost" Style="{StaticResource LomaWell}">
             <StackPanel
                 x:Name="FieldsHost"
-                Spacing="{StaticResource PsSpaceM}"
+                Spacing="{StaticResource LomaSpaceM}"
                 Padding="10" />
         </ContentControl>
 
         <TextBlock
             x:Name="EmptyHint"
             Text="未选中指令。选中一条指令后在这里改它的字段。"
-            Style="{StaticResource PsCaption}"
-            Foreground="{ThemeResource PsInkTertiary}"
+            Style="{StaticResource LomaCaption}"
+            Foreground="{ThemeResource LomaInkTertiary}"
             Visibility="Collapsed" />
     </StackPanel>
 </UserControl>

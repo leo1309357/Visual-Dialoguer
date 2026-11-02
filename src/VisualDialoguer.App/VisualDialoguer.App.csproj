@@ -16,6 +16,18 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Platforms>x64</Platforms>
 
+    <!-- Portable 单文件发布：所有托管与原生依赖（含 .NET 运行时、
+         Windows App SDK 引导器与 WinUI XAML 原生库）全部自解压进单个
+         VisualDialoguer.exe，拷到目标机即可运行，无需预装任何运行时。 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <!-- 只保留中文（zh-CN）卫星资源，去掉几十种语言目录，显著减小体积。 -->
+    <SatelliteResourceLanguages>zh-CN</SatelliteResourceLanguages>
+
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>

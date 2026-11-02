@@ -313,6 +313,43 @@ public sealed class EditorDocument
         return true;
     }
 
+    /// <summary>
+    /// 重命名节点 id。同步更新入口引用与所有 goto/choice 的 TargetNode。
+    /// 返回 false 表示旧 id 不存在或新 id 已被占用。
+    /// </summary>
+    public bool RenameNode(string oldId, string newId)
+    {
+        if (string.Equals(oldId, newId, StringComparison.Ordinal)) return true;
+        if (DialogueModel.FindNode(Script, oldId) is null) return false;
+        if (DialogueModel.FindNode(Script, newId) is not null) return false;
+
+        BeginChange();
+        foreach (DialogueNode node in Script.Nodes)
+        {
+            if (string.Equals(node.Id, oldId, StringComparison.Ordinal))
+            {
+                node.Id = newId;
+            }
+            foreach (Instruction inst in node.Instructions)
+            {
+                if (string.Equals(inst.TargetNode, oldId, StringComparison.Ordinal))
+                {
+                    inst.TargetNode = newId;
+                }
+            }
+        }
+        if (string.Equals(Script.EntryNodeId, oldId, StringComparison.Ordinal))
+        {
+            Script.EntryNodeId = newId;
+        }
+        if (string.Equals(_selectedNodeId, oldId, StringComparison.Ordinal))
+        {
+            _selectedNodeId = newId;
+        }
+        OnChanged();
+        return true;
+    }
+
     // ---- 指令 ---------------------------------------------------------------
 
     /// <summary>在选中节点末尾新增一条指令。</summary>

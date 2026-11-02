@@ -16,15 +16,15 @@ using Windows.Foundation;
 namespace VisualDialoguer.App.Views;
 
 /// <summary>
-/// 「流程图」页 ·「稿台 Paperstage」：案垫是一块带网格的桌面，节点是立在
-/// 上面的索引卡，choice / goto 是卡与卡之间的牵线。
+/// 「流程图」页 ·「Loma」轻拟物：案垫是一块带网格的桌面，节点是浮起
+/// 的索引卡，choice / goto 是卡与卡之间的牵线。
 ///
 /// 布局是算出来的，不是拖出来的：节点按顺序排在网格里，连线从源节点右侧
 /// 指向目标节点左侧。这样脚本一改，图就跟着重画，不会出现"图和脚本对不
 /// 上"的中间态。
 ///
 /// 配色全部走 <see cref="Theme"/>，不写死颜色——同一份绘图代码在日间是
-/// 暖纸案头、在深色下是夜读案头。
+/// 浅色案头、在深色下是夜读案头。
 /// </summary>
 public sealed partial class GraphPage : EditorPageBase
 {
@@ -68,7 +68,7 @@ public sealed partial class GraphPage : EditorPageBase
         GraphCanvas.Width = Math.Max(800, Columns * (NodeWidth + GapX));
         GraphCanvas.Height = Math.Max(480, rows * (NodeHeight + GapY));
 
-        GraphCanvas.Background = Theme.Brush("PsGraphDesk", Transparent());
+        GraphCanvas.Background = Theme.Brush("LomaGraphDesk", Transparent());
         DrawGrid();
 
         if (document is null || nodes.Count == 0)
@@ -111,7 +111,7 @@ public sealed partial class GraphPage : EditorPageBase
     /// <summary>案垫上的网格：很淡的一层刻度，给索引卡一个参照。</summary>
     private void DrawGrid()
     {
-        Brush grid = Theme.Brush("PsGraphGrid", Transparent());
+        Brush grid = Theme.Brush("LomaGraphGrid", Transparent());
         double width = GraphCanvas.Width;
         double height = GraphCanvas.Height;
 
@@ -156,9 +156,8 @@ public sealed partial class GraphPage : EditorPageBase
             Width = NodeWidth,
             Height = NodeHeight,
             CornerRadius = new CornerRadius(CardRadius),
-            BorderThickness = new Thickness(1),
-            BorderBrush = Theme.Brush(isEntry ? "PsCinnabarEdge" : "PsEdge", Hairline()),
-            Background = Theme.Brush("PsCardFace", Paper()),
+            BorderThickness = new Thickness(0),
+            Background = Theme.Brush("LomaCardFace", Paper()),
         };
 
         var content = new Grid();
@@ -169,7 +168,7 @@ public sealed partial class GraphPage : EditorPageBase
         var spine = new Border
         {
             CornerRadius = new CornerRadius(CardRadius, 0, 0, CardRadius),
-            Background = isEntry ? Theme.Brush("PsCinnabar", Hairline()) : SpineBrushFor(node),
+            Background = isEntry ? Theme.Brush("LomaAccent", Hairline()) : SpineBrushFor(node),
         };
         Grid.SetColumn(spine, 0);
         content.Children.Add(spine);
@@ -182,15 +181,15 @@ public sealed partial class GraphPage : EditorPageBase
         stack.Children.Add(new TextBlock
         {
             Text = (isEntry ? "★ " : string.Empty) + node.Id,
-            FontSize = Theme.Number("PsFontSizeBody", 14),
-            Foreground = Theme.Brush(isEntry ? "PsCinnabar" : "PsInk", Ink()),
+            FontSize = Theme.Number("LomaFontSizeBody", 14),
+            Foreground = Theme.Brush(isEntry ? "LomaAccent" : "LomaInk", Ink()),
             TextTrimming = TextTrimming.CharacterEllipsis,
         });
         stack.Children.Add(new TextBlock
         {
             Text = node.Instructions.Count + " 条指令",
-            FontSize = Theme.Number("PsFontSizeCaption", 12),
-            Foreground = Theme.Brush("PsInkTertiary", Ink()),
+            FontSize = Theme.Number("LomaFontSizeCaption", 12),
+            Foreground = Theme.Brush("LomaInkTertiary", Ink()),
         });
         Grid.SetColumn(stack, 1);
         content.Children.Add(stack);
@@ -204,9 +203,9 @@ public sealed partial class GraphPage : EditorPageBase
     }
 
     /// <summary>
-    /// 双层柔影，与 XAML 卡片的 <c>PsCard</c> 同一套做法：先铺一层大而淡的
-    /// 环境影，再压一层贴边的关键影。单层实色偏移在浅色案垫上会露出硬边，
-    /// 和旁边的纸片对不上。
+    /// 三层柔影，与 XAML 卡片的 <c>LomaCard</c> 同一套做法：先铺一层大而淡的
+    /// 环境影，再压一层贴边的关键影，最后补一道左上受光高光。单层实色偏移在
+    /// 浅色案垫上会露出硬边，和旁边的纸片对不上。
     /// </summary>
     private void AddShadows(double x, double y, double width, double height, double radius)
     {
@@ -215,19 +214,32 @@ public sealed partial class GraphPage : EditorPageBase
             Width = width + 8,
             Height = height + 8,
             CornerRadius = new CornerRadius(radius + 4),
-            Background = Theme.Brush("PsShadowAmbient", Transparent()),
+            Background = Theme.Brush("LomaShadowAmbient", Transparent()),
             IsHitTestVisible = false,
         };
         Canvas.SetLeft(ambient, x - 4);
         Canvas.SetTop(ambient, y);
         GraphCanvas.Children.Add(ambient);
 
+        // 左上受光高光：与关键影同尺寸、方向相反，模拟统一光源
+        var light = new Border
+        {
+            Width = width + 2,
+            Height = height + 2,
+            CornerRadius = new CornerRadius(radius + 1),
+            Background = Theme.Brush("LomaShadowLight", Transparent()),
+            IsHitTestVisible = false,
+        };
+        Canvas.SetLeft(light, x - 1);
+        Canvas.SetTop(light, y - 1);
+        GraphCanvas.Children.Add(light);
+
         var key = new Border
         {
             Width = width + 2,
             Height = height + 2,
             CornerRadius = new CornerRadius(radius + 1),
-            Background = Theme.Brush("PsShadow", Transparent()),
+            Background = Theme.Brush("LomaShadowDarkDeep", Transparent()),
             IsHitTestVisible = false,
         };
         Canvas.SetLeft(key, x - 1);
@@ -241,7 +253,7 @@ public sealed partial class GraphPage : EditorPageBase
     /// </summary>
     private static Brush SpineBrushFor(DialogueNode node) => node.Instructions.Count > 0
         ? Theme.KindBrush(node.Instructions[0].Kind)
-        : Theme.Brush("PsEdgeStrong", Hairline());
+        : Theme.Brush("LomaEdgeStrong", Hairline());
 
     /// <summary>
     /// 画一条牵线：源节点右侧 → 目标节点左侧，末端张开箭头；choice 的标签
@@ -249,7 +261,7 @@ public sealed partial class GraphPage : EditorPageBase
     /// </summary>
     private void DrawConnector((double X, double Y) from, (double X, double Y) to, Instruction instruction)
     {
-        Brush thread = Theme.Brush("PsThread", Hairline());
+        Brush thread = Theme.Brush("LomaThread", Hairline());
 
         double x1 = from.X + NodeWidth;
         double y1 = from.Y + NodeHeight * 0.5;
@@ -299,8 +311,8 @@ public sealed partial class GraphPage : EditorPageBase
         var labelText = new TextBlock
         {
             Text = label,
-            FontSize = Theme.Number("PsFontSizeCaption", 12),
-            Foreground = Theme.Brush("PsInkSecondary", Ink()),
+            FontSize = Theme.Number("LomaFontSizeCaption", 12),
+            Foreground = Theme.Brush("LomaInkSecondary", Ink()),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -318,7 +330,7 @@ public sealed partial class GraphPage : EditorPageBase
             Width = chipWidth,
             Height = chipHeight,
             CornerRadius = new CornerRadius(5),
-            Background = Theme.Brush("PsShadow", Transparent()),
+            Background = Theme.Brush("LomaShadowDarkDeep", Transparent()),
             IsHitTestVisible = false,
         };
         Canvas.SetLeft(chipShadow, centerX - chipWidth * 0.5 + 1);
@@ -330,9 +342,8 @@ public sealed partial class GraphPage : EditorPageBase
             Width = chipWidth,
             Height = chipHeight,
             CornerRadius = new CornerRadius(5),
-            BorderThickness = new Thickness(1),
-            BorderBrush = Theme.Brush("PsEdge", Hairline()),
-            Background = Theme.Brush("PsPaperRaised", Paper()),
+            BorderThickness = new Thickness(0),
+            Background = Theme.Brush("LomaRaised", Paper()),
             Child = labelText,
         };
         Canvas.SetLeft(chip, centerX - chipWidth * 0.5);

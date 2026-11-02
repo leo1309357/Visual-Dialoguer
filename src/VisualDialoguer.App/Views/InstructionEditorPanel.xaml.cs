@@ -95,7 +95,7 @@ public sealed partial class InstructionEditorPanel : UserControl
                 Text = label,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = 13,
-                Foreground = Theme.Brush("PsInkSecondary", new SolidColorBrush(Windows.UI.Color.FromArgb(0xFF, 0x80, 0x80, 0x80))),
+                Foreground = Theme.Brush("LomaInkSecondary", new SolidColorBrush(Windows.UI.Color.FromArgb(0xFF, 0x80, 0x80, 0x80))),
             };
             Grid.SetColumn(caption, 0);
             grid.Children.Add(caption);

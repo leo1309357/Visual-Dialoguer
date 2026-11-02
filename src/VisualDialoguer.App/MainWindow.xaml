@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  主窗口外壳 ·「稿台 Paperstage」
+  主窗口外壳 ·「Loma」轻拟物
 
-  层次自下而上：案垫(PsDesk) → 命令栏与页签各自是一张稿纸(PsPaper) →
-  内容卡片再浮起一层。状态栏做成"案头信息条"，压在最底下。
+  层次：桌面底色(LomaBase) → 工具栏与状态栏各是一块凸起面 →
+  内容卡片再浮起一层。流程图作为覆盖层浮在最上方。
 -->
 <Window
     x:Class="VisualDialoguer.App.MainWindow"
@@ -11,114 +11,165 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:VisualDialoguer.App.Views">
 
-    <Grid Background="{ThemeResource PsDesk}" RowDefinitions="Auto,*,Auto">
-        <Grid.KeyboardAccelerators>
-            <KeyboardAccelerator Key="N" Modifiers="Control" Invoked="OnAcceleratorNew" />
-            <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnAcceleratorOpen" />
-            <KeyboardAccelerator Key="S" Modifiers="Control" Invoked="OnAcceleratorSave" />
-            <KeyboardAccelerator Key="S" Modifiers="Control,Shift" Invoked="OnAcceleratorSaveAs" />
-            <KeyboardAccelerator Key="F5" Invoked="OnAcceleratorValidate" />
-            <KeyboardAccelerator Key="Z" Modifiers="Control" Invoked="OnAcceleratorUndo" />
-            <KeyboardAccelerator Key="Y" Modifiers="Control" Invoked="OnAcceleratorRedo" />
-        </Grid.KeyboardAccelerators>
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- 快捷键挂在一个 0 尺寸、不命中测试的隐藏元素上。
+             若挂在根 Grid 上，WinUI 会把根 Grid 当作命令元素，
+             悬停时在鼠标旁弹出跟随光标的快捷键提示泡（"Ctrl+N"）。 -->
+        <Grid
+            Width="0" Height="0"
+            HorizontalAlignment="Left" VerticalAlignment="Top"
+            IsHitTestVisible="False">
+            <Grid.KeyboardAccelerators>
+                <KeyboardAccelerator Key="N" Modifiers="Control" Invoked="OnAcceleratorNew" />
+                <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnAcceleratorOpen" />
+                <KeyboardAccelerator Key="S" Modifiers="Control" Invoked="OnAcceleratorSave" />
+                <KeyboardAccelerator Key="S" Modifiers="Control,Shift" Invoked="OnAcceleratorSaveAs" />
+                <KeyboardAccelerator Key="F5" Invoked="OnAcceleratorValidate" />
+                <KeyboardAccelerator Key="Z" Modifiers="Control" Invoked="OnAcceleratorUndo" />
+                <KeyboardAccelerator Key="Y" Modifiers="Control" Invoked="OnAcceleratorRedo" />
+                <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="OnAcceleratorToggleGraph" />
+            </Grid.KeyboardAccelerators>
+        </Grid>
 
-        <!-- 命令栏：一张浮起的稿纸，底部一道发丝边把它和内容分开 -->
-        <Border
-            Grid.Row="0"
-            Background="{ThemeResource PsCardFace}"
-            BorderBrush="{ThemeResource PsEdge}"
-            BorderThickness="0,0,0,1">
-            <CommandBar
-                x:Name="Toolbar"
-                DefaultLabelPosition="Right"
-                HorizontalAlignment="Left"
-                Background="Transparent"
-                BorderThickness="0">
-                <AppBarButton Label="新建" Click="OnNew">
-                    <AppBarButton.Icon>
+        <!-- 窗口底色层：单独一层铺满三行。
+             根 Grid 本身不设 Background（避免成为命中测试目标而被 WinUI
+             自动挂上 KeyboardAccelerator 的跟随鼠标提示泡）。 -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" Background="{ThemeResource LomaBase}" />
+
+        <!-- 工具栏：一块浮起的板。
+             立体感由三件事叠出来，缺一件就塌成贴纸：
+               ① 条面竖向受光渐变（顶亮 → 底暗）；
+               ② 顶棱一像素亮线，交代光源在左上；
+               ③ 投影落在条"外面"的桌面上（见下方内容区顶部那道渐隐带）。 -->
+        <Grid Grid.Row="0">
+            <Border Background="{ThemeResource LomaBarFace}" />
+            <Border
+                Height="1"
+                VerticalAlignment="Top"
+                Background="{ThemeResource LomaBarRim}"
+                IsHitTestVisible="False" />
+            <Grid Padding="8,4" ColumnSpacing="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧：文件操作 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                    <Button Style="{StaticResource LomaIconButton}" Click="OnNew" ToolTipService.ToolTip="新建 (Ctrl+N)">
                         <SymbolIcon Symbol="Page" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton Label="打开" Click="OnOpen">
-                    <AppBarButton.Icon>
+                    </Button>
+                    <Button Style="{StaticResource LomaIconButton}" Click="OnOpen" ToolTipService.ToolTip="打开 (Ctrl+O)">
                         <SymbolIcon Symbol="OpenFile" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton Label="保存" Click="OnSave">
-                    <AppBarButton.Icon>
+                    </Button>
+                    <Button Style="{StaticResource LomaIconButton}" Click="OnSave" ToolTipService.ToolTip="保存 (Ctrl+S)">
                         <SymbolIcon Symbol="Save" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton Label="另存为" Click="OnSaveAs">
-                    <AppBarButton.Icon>
+                    </Button>
+                    <Button Style="{StaticResource LomaIconButton}" Click="OnSaveAs" ToolTipService.ToolTip="另存为 (Ctrl+Shift+S)">
                         <SymbolIcon Symbol="Folder" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarSeparator />
-                <AppBarButton Label="校验" Click="OnValidate">
-                    <AppBarButton.Icon>
+                    </Button>
+                    <Border Width="1" Margin="6,4" Background="{ThemeResource LomaEdge}" />
+                    <Button Style="{StaticResource LomaIconButton}" Click="OnValidate" ToolTipService.ToolTip="校验 (F5)">
                         <SymbolIcon Symbol="Accept" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarSeparator />
-                <AppBarButton Label="撤销" Click="OnUndo">
-                    <AppBarButton.Icon>
+                    </Button>
+                    <Border Width="1" Margin="6,4" Background="{ThemeResource LomaEdge}" />
+                    <Button Style="{StaticResource LomaIconButton}" Click="OnUndo" ToolTipService.ToolTip="撤销 (Ctrl+Z)">
                         <SymbolIcon Symbol="Undo" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton Label="重做" Click="OnRedo">
-                    <AppBarButton.Icon>
+                    </Button>
+                    <Button Style="{StaticResource LomaIconButton}" Click="OnRedo" ToolTipService.ToolTip="重做 (Ctrl+Y)">
                         <SymbolIcon Symbol="Redo" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-            </CommandBar>
-        </Border>
+                    </Button>
+                </StackPanel>
 
-        <!-- 页签区：选中的页签本身就是浮起的稿纸，未选中是案垫上的压痕 -->
-        <TabView
-            Grid.Row="1"
-            x:Name="Tabs"
-            Background="Transparent"
-            Padding="8,8,8,0"
-            IsAddTabButtonVisible="False">
-            <TabViewItem Header="对话结构" IsClosable="False"
-                         HorizontalContentAlignment="Stretch"
-                         VerticalContentAlignment="Stretch">
-                <local:StructurePage x:Name="StructurePage" />
-            </TabViewItem>
-            <TabViewItem Header="指令编排" IsClosable="False"
-                         HorizontalContentAlignment="Stretch"
-                         VerticalContentAlignment="Stretch">
-                <local:ArrangePage x:Name="ArrangePage" />
-            </TabViewItem>
-            <TabViewItem Header="流程图" IsClosable="False"
-                         HorizontalContentAlignment="Stretch"
-                         VerticalContentAlignment="Stretch">
-                <local:GraphPage x:Name="GraphPage" />
-            </TabViewItem>
-        </TabView>
-
-        <!-- 案头信息条 -->
-        <Border
-            Grid.Row="2"
-            Background="{ThemeResource PsPaper}"
-            BorderBrush="{ThemeResource PsEdge}"
-            BorderThickness="0,1,0,0"
-            Padding="{StaticResource PsPadStatusBar}">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock
-                    Grid.Column="0"
-                    x:Name="StatusText"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource PsCaption}"
-                    Text="就绪。" />
-                <TextBlock
-                    Grid.Column="1"
-                    x:Name="CountsText"
-                    VerticalAlignment="Center"
-                    FontSize="{StaticResource PsFontSizeCaption}"
-                    Foreground="{ThemeResource PsInkTertiary}" />
+                <!-- 右侧：视图切换与主题 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                    <Button
+                        x:Name="GraphToggleButton"
+                        Style="{StaticResource LomaIconButton}"
+                        Click="OnToggleGraph"
+                        ToolTipService.ToolTip="流程图 (Ctrl+F)">
+                        <FontIcon Glyph="&#xE7C9;" />
+                    </Button>
+                    <Button
+                        x:Name="ThemeToggleButton"
+                        Style="{StaticResource LomaIconButton}"
+                        Click="OnToggleTheme"
+                        ToolTipService.ToolTip="切换深浅色">
+                        <FontIcon Glyph="&#xE706;" />
+                    </Button>
+                </StackPanel>
             </Grid>
-        </Border>
+        </Grid>
+
+        <!-- 主内容区 -->
+        <Grid Grid.Row="1">
+            <!-- 工作台 -->
+            <local:WorkspacePage x:Name="Workspace" />
+
+            <!-- 流程图覆盖层：默认隐藏，按 Ctrl+F 或点工具栏按钮切换 -->
+            <Grid
+                x:Name="GraphOverlay"
+                Background="{ThemeResource LomaBase}"
+                Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <!-- 覆盖层顶部条 -->
+                <Border Grid.Row="0" Padding="12,8" Background="{ThemeResource LomaBarFace}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Text="流程图" Style="{StaticResource LomaSectionTitle}" VerticalAlignment="Center" />
+                        <Button
+                            Grid.Column="2"
+                            Content="返回编辑"
+                            Click="OnToggleGraph"
+                            Style="{StaticResource LomaButton}" />
+                    </Grid>
+                </Border>
+                <local:GraphPage x:Name="GraphPage" Grid.Row="1" />
+            </Grid>
+
+            <!-- 这两条是工具栏与状态栏投在内容区上的影。
+                 必须画在条的外侧（也就是这一行里），并且压在内容之上，
+                 才会读成"板浮在桌面上"，而不是"条自己身上有块脏东西"。 -->
+            <Border
+                Height="12"
+                VerticalAlignment="Top"
+                Background="{ThemeResource LomaEdgeShadowDown}"
+                IsHitTestVisible="False" />
+            <Border
+                Height="12"
+                VerticalAlignment="Bottom"
+                Background="{ThemeResource LomaEdgeShadowUp}"
+                IsHitTestVisible="False" />
+        </Grid>
+
+        <!-- 状态栏：与工具栏同一套构造，镜像朝上 -->
+        <Grid Grid.Row="2">
+            <Border
+                Background="{ThemeResource LomaBarFace}"
+                Padding="{StaticResource LomaPadStatusBar}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock
+                        Grid.Column="0"
+                        x:Name="StatusText"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource LomaCaption}"
+                        Text="就绪。" />
+                    <TextBlock
+                        Grid.Column="1"
+                        x:Name="CountsText"
+                        VerticalAlignment="Center"
+                        FontSize="{StaticResource LomaFontSizeCaption}"
+                        Foreground="{ThemeResource LomaInkTertiary}" />
+                </Grid>
+            </Border>
+            <Border
+                Height="1"
+                VerticalAlignment="Top"
+                Background="{ThemeResource LomaBarRim}"
+                IsHitTestVisible="False" />
+        </Grid>
     </Grid>
 </Window>

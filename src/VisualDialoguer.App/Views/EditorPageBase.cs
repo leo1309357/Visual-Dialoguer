@@ -55,7 +55,7 @@ public abstract class EditorPageBase : UserControl
     /// 显示到属性面板。重建列表会触发 SelectionChanged，用
     /// <see cref="SuppressSelection"/> 挡住回写。
     /// </summary>
-    protected void RefreshInstructionList(ListView list, InstructionEditorPanel editor)
+    protected virtual void RefreshInstructionList(ListView list, InstructionEditorPanel editor)
     {
         EditorDocument? document = Document;
         if (document is null)
@@ -68,12 +68,14 @@ public abstract class EditorPageBase : UserControl
         DialogueNode? node = document.SelectedNode;
         if (node is not null)
         {
-            foreach (Instruction instruction in node.Instructions)
+            for (int index = 0; index < node.Instructions.Count; ++index)
             {
+                Instruction instruction = node.Instructions[index];
                 rows.Add(new InstructionRow
                 {
                     Instruction = instruction,
                     KindLabel = InstKindInfo.DisplayName(instruction.Kind),
+                    OriginalIndex = index,
                 });
             }
         }
@@ -93,7 +95,7 @@ public abstract class EditorPageBase : UserControl
     /// <c>RefreshAll</c>，属性面板在 <see cref="RefreshInstructionList"/> 里跟着
     /// 更新。这里不再手动 Load / 通知，避免和事件驱动重复刷新。
     /// </remarks>
-    protected void OnInstructionSelection(ListView list)
+    protected virtual void OnInstructionSelection(ListView list)
     {
         if (SuppressSelection || Document is null)
         {

@@ -12,12 +12,12 @@ using VisualDialoguer.Core.Model;
 namespace VisualDialoguer.App.Views;
 
 /// <summary>
-/// 「稿台 Paperstage」主题的代码侧读取入口。
+/// 「Loma」轻拟物主题的代码侧读取入口。
 ///
-/// XAML 里可以直接写 <c>{ThemeResource PsInk}</c>，但流程图是在代码里
+/// XAML 里可以直接写 <c>{ThemeResource LomaInk}</c>，但流程图是在代码里
 /// 一笔笔画出来的，画刷只能查出来。查询走 <see cref="Application"/>,
 /// 它会按当前日/夜主题解析 <c>ThemeDictionaries</c>，所以同一份绘图代码
-/// 在浅色下是暖纸、深色下是夜读案头。
+/// 在浅色下是浅色案头、深色下是夜读案头。
 ///
 /// 所有查询都带兜底：万一某个键缺失，返回一个可见的替代值而不是崩溃——
 /// 界面少个颜色是瑕疵，抛异常是事故。
@@ -59,7 +59,7 @@ public static class Theme
     /// <summary>
     /// 从一个主题画刷里取色值。
     ///
-    /// 主题字典里的 <c>Ps*Color</c>（Color 类型）在运行时查不到——只有画刷
+    /// 主题字典里的 <c>Loma*Color</c>（Color 类型）在运行时查不到——只有画刷
     /// 能被 <see cref="Application.Resources"/> 解析出来；而 AppWindow 的
     /// 标题栏要的是 Color。所以这里先取画刷，再读它的 Color。
     /// </summary>
@@ -91,14 +91,14 @@ public static class Theme
     /// <summary>指令类型语义色的资源键。</summary>
     public static string KindBrushKey(InstKind kind) => kind switch
     {
-        InstKind.Speaker => "PsKindSpeaker",
-        InstKind.Line => "PsKindLine",
-        InstKind.Choice => "PsKindChoice",
-        InstKind.Goto => "PsKindGoto",
-        InstKind.Set => "PsKindSet",
-        InstKind.Clear => "PsKindClear",
-        InstKind.Emit => "PsKindEmit",
-        InstKind.End => "PsKindEnd",
-        _ => "PsKindEnd",
+        InstKind.Speaker => "LomaKindSpeaker",
+        InstKind.Line => "LomaKindLine",
+        InstKind.Choice => "LomaKindChoice",
+        InstKind.Goto => "LomaKindGoto",
+        InstKind.Set => "LomaKindSet",
+        InstKind.Clear => "LomaKindClear",
+        InstKind.Emit => "LomaKindEmit",
+        InstKind.End => "LomaKindEnd",
+        _ => "LomaKindEnd",
     };
 }

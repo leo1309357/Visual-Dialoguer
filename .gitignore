@@ -31,3 +31,9 @@ coverage*.info
 
 # Local runtime state
 *.log
+
+# Portable single-file publish output
+dist/
+
+# Legacy residue: superseded by src/VisualDialoguer.App
+src/VisualDialoguer/

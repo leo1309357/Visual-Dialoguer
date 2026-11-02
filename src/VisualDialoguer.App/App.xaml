@@ -8,10 +8,12 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
 
-                <!-- 「稿台 Paperstage」主题必须排在 XamlControlsResources 之后：
-                     它覆写了框架语义键（Button*/TextControl*/TabViewItem* 等），
-                     放在前面会被控件库的默认值盖回去。 -->
-                <ResourceDictionary Source="ms-appx:///Themes/Paperstage.xaml" />
+                <!-- 「Loma」轻拟物主题（默认）。必须排在 XamlControlsResources 之后：
+                     它覆写了框架语义键（Button*/TextControl*/ComboBox* 等），
+                     放在前面会被控件库的默认值盖回去。
+                     切回 Paperstage 时把下一行 Source 改为
+                     ms-appx:///Themes/Paperstage.xaml。 -->
+                <ResourceDictionary Source="ms-appx:///Themes/Loma.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

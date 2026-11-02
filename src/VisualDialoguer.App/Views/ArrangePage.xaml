@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  「指令编排」页 ·「稿台 Paperstage」
+  「指令编排」页 ·「Loma」轻拟物
 
-  与「对话结构」同一套纸片语言，只是节点选择收成顶部一道下拉框，
-  把宽度让给指令表——集中编排一个节点时用。
+  与「对话结构」同一套凸起面语言，节点选择收成顶部一道下拉框，
+  把宽度让给指令表。
 -->
 <local:EditorPageBase
     x:Class="VisualDialoguer.App.Views.ArrangePage"
@@ -12,28 +12,27 @@
     xmlns:local="using:VisualDialoguer.App.Views">
 
     <Grid
-        Padding="{StaticResource PsPadCard}"
-        ColumnSpacing="{StaticResource PsSpaceL}"
+        Padding="{StaticResource LomaPadCard}"
+        ColumnSpacing="{StaticResource LomaSpaceL}"
         ColumnDefinitions="*,324">
 
-        <ContentControl Grid.Column="0" Style="{StaticResource PsCard}">
+        <ContentControl Grid.Column="0" Style="{StaticResource LomaCard}">
             <Grid
-                Padding="{StaticResource PsPadCard}"
-                RowSpacing="{StaticResource PsSpaceM}"
+                Padding="{StaticResource LomaPadCard}"
+                RowSpacing="{StaticResource LomaSpaceM}"
                 RowDefinitions="Auto,*,Auto">
 
-                <!-- 节点选择：案头顶部的一枚标签。"设为入口"作用于节点而非
-                     指令，跟在下拉框后面，指令动作行就能与结构页完全一致。 -->
-                <Grid ColumnSpacing="{StaticResource PsSpaceM}" ColumnDefinitions="Auto,*,Auto">
+                <Grid ColumnSpacing="{StaticResource LomaSpaceM}" ColumnDefinitions="Auto,*,Auto">
                     <TextBlock
                         Text="节点"
-                        Style="{StaticResource PsSectionTitle}"
+                        Style="{StaticResource LomaSectionTitle}"
                         VerticalAlignment="Center" />
                     <ComboBox
                         Grid.Column="1"
                         x:Name="NodePicker"
                         HorizontalAlignment="Left"
                         MinWidth="240"
+                        UseSystemFocusVisuals="False"
                         SelectionChanged="OnNodePicked" />
                     <Button
                         Grid.Column="2"
@@ -47,40 +46,39 @@
                     SelectionMode="Single"
                     Background="Transparent"
                     BorderThickness="0"
-                    ItemTemplate="{StaticResource PsInstructionRow}"
+                    ItemTemplate="{StaticResource LomaInstructionRow}"
                     SelectionChanged="OnInstructionSelectionChanged" />
 
-                <!-- 与结构页同一套排布：类型一行、动作一行 -->
-                <Grid Grid.Row="2" RowSpacing="{StaticResource PsSpaceM}" RowDefinitions="Auto,Auto">
+                <Grid Grid.Row="2" RowSpacing="{StaticResource LomaSpaceM}" RowDefinitions="Auto,Auto">
                     <ComboBox
                         x:Name="KindPicker"
                         Header="类型"
-                        HorizontalAlignment="Stretch" />
+                        HorizontalAlignment="Stretch"
+                        UseSystemFocusVisuals="False" />
                     <StackPanel
                         Grid.Row="1"
                         Orientation="Horizontal"
-                        Spacing="{StaticResource PsSpaceS}">
+                        Spacing="{StaticResource LomaSpaceS}">
                         <Button
                             Content="新增指令"
                             Style="{StaticResource AccentButtonStyle}"
                             Click="OnAddInstruction" />
                         <Button
-                            Style="{StaticResource PsIconButton}"
+                            Style="{StaticResource LomaIconButton}"
                             Click="OnDeleteInstruction"
                             ToolTipService.ToolTip="删除选中指令">
                             <SymbolIcon Symbol="Delete" />
                         </Button>
                         <Button
-                            Style="{StaticResource PsIconButton}"
+                            Style="{StaticResource LomaIconButton}"
                             Click="OnMoveUp"
                             ToolTipService.ToolTip="上移">
                             <SymbolIcon Symbol="Up" />
                         </Button>
                         <Button
-                            Style="{StaticResource PsIconButton}"
+                            Style="{StaticResource LomaIconButton}"
                             Click="OnMoveDown"
                             ToolTipService.ToolTip="下移">
-                            <!-- Symbol 枚举没有下箭头，用 Segoe Fluent Icons 字形 -->
                             <FontIcon Glyph="&#xE74B;" />
                         </Button>
                     </StackPanel>
@@ -89,10 +87,10 @@
         </ContentControl>
 
         <!-- 属性面板 -->
-        <ContentControl Grid.Column="1" Style="{StaticResource PsCard}">
+        <ContentControl Grid.Column="1" Style="{StaticResource LomaCard}">
             <ScrollViewer
                 VerticalScrollBarVisibility="Auto"
-                Padding="{StaticResource PsPadCard}">
+                Padding="{StaticResource LomaPadCard}">
                 <local:InstructionEditorPanel x:Name="Editor" />
             </ScrollViewer>
         </ContentControl>

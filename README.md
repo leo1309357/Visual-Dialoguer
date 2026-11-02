@@ -50,7 +50,7 @@ VisualDialoguer/
 
 ## 构建与运行
 
-需要 .NET SDK 8 或更高（Windows 11 / Windows 10 1809 及以上）。
+需要 .NET SDK 8 或更高（Windows 10 1809 及以上 / Windows 11）。
 
 ```powershell
 dotnet build VisualDialoguer.sln
@@ -58,10 +58,23 @@ dotnet test  tests\VisualDialoguer.Core.Tests\VisualDialoguer.Core.Tests.csproj
 dotnet run --project src\VisualDialoguer.App\VisualDialoguer.App.csproj
 ```
 
-应用是**非打包（unpackaged）**的：Windows App SDK 运行时随程序走
-（`WindowsAppSDKSelfContained`），不需要装 MSIX、不需要签名、不需要预装
-Windows App SDK。产物在
-`src\VisualDialoguer.App\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\`。
+### 发布单文件 portable exe
+
+```powershell
+dotnet publish src\VisualDialoguer.App\VisualDialoguer.App.csproj `
+  -c Release -r win-x64 --self-contained true
+```
+
+产物为**单个 `VisualDialoguer.exe`**（约 83 MB），位于
+`src\VisualDialoguer.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\`。
+拷到任何 Windows 10 1809+ / Windows 11 x64 机器上双击即可运行——不需要
+预装 .NET 运行时、不需要 MSIX 安装、不需要签名。.NET 运行时、Windows App
+SDK 引导器与 WinUI XAML 原生库全部自解压打包在 exe 内
+（`PublishSingleFile` + `IncludeNativeLibrariesForSelfExtract` + 压缩）。
+
+目标框架为 `net8.0-windows10.0.19041.0`（Windows 10 2004 SDK），
+最低运行版本 `TargetPlatformMinVersion=10.0.17763.0`（Windows 10 1809），
+即 Win10 SDK 全系列兼容。卫星资源只保留 `zh-CN`，其余语言目录已剔除。
 
 ## 界面与功能
 
