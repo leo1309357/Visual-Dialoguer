@@ -1,4 +1,4 @@
-<#
+﻿<#
     build.ps1 — VisualDialoguer 构建脚本(增强版)
 
     职责:
