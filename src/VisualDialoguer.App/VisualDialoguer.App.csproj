@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VisualDialoguer.Core\VisualDialoguer.Core.csproj" />
+    <ProjectReference Include="..\Loma.Theme\Loma.Theme.csproj" />
   </ItemGroup>
 
 </Project>
