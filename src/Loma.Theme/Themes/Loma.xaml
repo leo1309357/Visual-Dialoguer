@@ -819,14 +819,22 @@
                             Margin="2,3,-2,-3"
                             Background="{ThemeResource LomaShadowDarkDeep}"
                             CornerRadius="{TemplateBinding CornerRadius}"
-                            IsHitTestVisible="False" />
+                            IsHitTestVisible="False">
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="ShadowDarkXform" />
+                            </Border.RenderTransform>
+                        </Border>
                         <!-- 左上亮高光（凸起时可见，按下时隐藏） -->
                         <Border
                             x:Name="ShadowLight"
                             Margin="-2,-3,2,3"
                             Background="{ThemeResource LomaShadowLight}"
                             CornerRadius="{TemplateBinding CornerRadius}"
-                            IsHitTestVisible="False" />
+                            IsHitTestVisible="False">
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="ShadowLightXform" />
+                            </Border.RenderTransform>
+                        </Border>
                         <!-- 按下时的反向投影（左上暗） -->
                         <Border
                             x:Name="ShadowDarkInset"
@@ -855,7 +863,11 @@
                                 VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                                 Content="{TemplateBinding Content}"
                                 ContentTemplate="{TemplateBinding ContentTemplate}"
-                                Foreground="{TemplateBinding Foreground}" />
+                                Foreground="{TemplateBinding Foreground}">
+                                <ContentPresenter.RenderTransform>
+                                    <TranslateTransform x:Name="ContentXform" />
+                                </ContentPresenter.RenderTransform>
+                            </ContentPresenter>
                         </Border>
 
                         <VisualStateManager.VisualStateGroups>
@@ -872,6 +884,21 @@
                                         <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="ContentXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="PointerOver">
@@ -886,6 +913,17 @@
                                         <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15" />
+                                        <!-- 悬停浮起：阴影离得更远、高光升得更高 -->
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkXform" Storyboard.TargetProperty="Y" To="1.5" Duration="0:0:0.16">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightXform" Storyboard.TargetProperty="Y" To="-1.5" Duration="0:0:0.16">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
@@ -901,6 +939,14 @@
                                         <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.1" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1" />
+                                        <!-- 按下：内容下压 1px，阴影收回原位 -->
+                                        <DoubleAnimation Storyboard.TargetName="ContentXform" Storyboard.TargetProperty="Y" To="1" Duration="0:0:0.1">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseIn" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.1" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
@@ -915,6 +961,9 @@
                                         <DoubleAnimation Storyboard.TargetName="ShadowLight" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowDarkInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
                                         <DoubleAnimation Storyboard.TargetName="ShadowLightInset" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowDarkXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="ShadowLightXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="ContentXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0" />
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>
@@ -949,6 +998,9 @@
                         x:Name="Root"
                         Background="{TemplateBinding Background}"
                         CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.RenderTransform>
+                            <TranslateTransform x:Name="RootXform" />
+                        </Grid.RenderTransform>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal">
@@ -959,6 +1011,11 @@
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInkSecondary}" />
                                         </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation Storyboard.TargetName="RootXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.16">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="PointerOver">
@@ -969,6 +1026,12 @@
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInk}" />
                                         </ObjectAnimationUsingKeyFrames>
+                                        <!-- 悬停：整块上浮 1px -->
+                                        <DoubleAnimation Storyboard.TargetName="RootXform" Storyboard.TargetProperty="Y" To="-1" Duration="0:0:0.16">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
@@ -979,6 +1042,12 @@
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Content" Storyboard.TargetProperty="Foreground">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaAccentPressed}" />
                                         </ObjectAnimationUsingKeyFrames>
+                                        <!-- 按下：整块下沉 1px -->
+                                        <DoubleAnimation Storyboard.TargetName="RootXform" Storyboard.TargetProperty="Y" To="1" Duration="0:0:0.1">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseIn" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
@@ -990,6 +1059,7 @@
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LomaInkTertiary}" />
                                         </ObjectAnimationUsingKeyFrames>
                                         <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.4" Duration="0:0:0" />
+                                        <DoubleAnimation Storyboard.TargetName="RootXform" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0" />
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>
@@ -1093,7 +1163,11 @@
                                             Storyboard.TargetName="InsetShadow"
                                             Storyboard.TargetProperty="Opacity"
                                             To="1"
-                                            Duration="0:0:0.15" />
+                                            Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuadraticEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
@@ -1115,7 +1189,11 @@
                                 <VisualState x:Name="Focused">
                                     <Storyboard>
                                         <!-- 聚焦不画任何 accent 环，只把坑抬起来：上沿压暗松开，像从井里抬起 -->
-                                        <DoubleAnimation Storyboard.TargetName="InsetShadow" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0:0:0.2" />
+                                        <DoubleAnimation Storyboard.TargetName="InsetShadow" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0:0:0.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuadraticEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BackgroundElement" Storyboard.TargetProperty="Background">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlBackgroundFocused}" />
                                         </ObjectAnimationUsingKeyFrames>
