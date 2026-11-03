@@ -31,10 +31,11 @@
             </Grid.KeyboardAccelerators>
         </Grid>
 
-        <!-- 窗口底色层：单独一层铺满三行。
+        <!-- 窗口底色层：单独一层铺满三行。用桌面渐变（顶光渐弱），
+             台面有"光从左上照下来"的氛围。
              根 Grid 本身不设 Background（避免成为命中测试目标而被 WinUI
              自动挂上 KeyboardAccelerator 的跟随鼠标提示泡）。 -->
-        <Grid Grid.Row="0" Grid.RowSpan="3" Background="{ThemeResource LomaBase}" />
+        <Grid Grid.Row="0" Grid.RowSpan="3" Background="{ThemeResource LomaDeskGradient}" />
 
         <!-- 工具栏：一块浮起的板。
              立体感由三件事叠出来，缺一件就塌成贴纸：
@@ -110,7 +111,7 @@
             <!-- 流程图覆盖层：默认隐藏，按 Ctrl+F 或点工具栏按钮切换 -->
             <Grid
                 x:Name="GraphOverlay"
-                Background="{ThemeResource LomaBase}"
+                Background="{ThemeResource LomaDeskGradient}"
                 Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

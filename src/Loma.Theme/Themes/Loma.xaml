@@ -107,6 +107,15 @@
 
             <!-- ═══════════════ 画刷令牌 ═══════════════ -->
             <SolidColorBrush x:Key="LomaBase" Color="{StaticResource LomaBaseColor}" />
+
+            <!-- 桌面渐变：顶光渐弱到底，比平色多一点"光照"，整个台面像被
+                 左上光源照亮。Loma 是"实体材质"，不用半透明背板，
+                 渐变是纯实色，保持轻拟物的厚实质感。 -->
+            <LinearGradientBrush x:Key="LomaDeskGradient" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#E2DCD5" Offset="0" />
+                <GradientStop Color="{StaticResource LomaBaseColor}" Offset="0.55" />
+                <GradientStop Color="#D5CFC7" Offset="1" />
+            </LinearGradientBrush>
             <SolidColorBrush x:Key="LomaRaised" Color="{StaticResource LomaRaisedColor}" />
             <SolidColorBrush x:Key="LomaRaisedTop" Color="{StaticResource LomaRaisedTopColor}" />
             <SolidColorBrush x:Key="LomaSunken" Color="{StaticResource LomaSunkenColor}" />
@@ -422,6 +431,13 @@
 
             <!-- ── 画刷令牌 ── -->
             <SolidColorBrush x:Key="LomaBase" Color="{StaticResource LomaBaseColor}" />
+
+            <!-- 桌面渐变：顶光渐弱到底，与浅色主题同一套顶光语言 -->
+            <LinearGradientBrush x:Key="LomaDeskGradient" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#2B2927" Offset="0" />
+                <GradientStop Color="{StaticResource LomaBaseColor}" Offset="0.55" />
+                <GradientStop Color="#1E1C1B" Offset="1" />
+            </LinearGradientBrush>
             <SolidColorBrush x:Key="LomaRaised" Color="{StaticResource LomaRaisedColor}" />
             <SolidColorBrush x:Key="LomaRaisedTop" Color="{StaticResource LomaRaisedTopColor}" />
             <SolidColorBrush x:Key="LomaSunken" Color="{StaticResource LomaSunkenColor}" />
