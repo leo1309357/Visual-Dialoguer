@@ -104,7 +104,7 @@ SDK 引导器与 WinUI XAML 原生库全部自解压打包在 exe 内
 
 ## 主题与视觉规范
 
-界面主题叫「稿台 Paperstage」，定义在
+界面主题叫「Loma」，定义在
 `src/VisualDialoguer.App/Themes/Paperstage.xaml`：日夜两套 `ThemeDictionaries`
 ＋一组与主题无关的尺度令牌。设计语言是轻拟物化的 Windows 11 Fluent：
 柔和的高光与双层柔影、统一的圆角与发丝边、克制的材质差异。
