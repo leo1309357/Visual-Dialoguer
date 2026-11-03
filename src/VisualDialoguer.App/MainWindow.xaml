@@ -28,6 +28,7 @@
                 <KeyboardAccelerator Key="Z" Modifiers="Control" Invoked="OnAcceleratorUndo" />
                 <KeyboardAccelerator Key="Y" Modifiers="Control" Invoked="OnAcceleratorRedo" />
                 <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="OnAcceleratorToggleGraph" />
+                <KeyboardAccelerator Key="F1" Invoked="OnAcceleratorHelp" />
             </Grid.KeyboardAccelerators>
         </Grid>
 
@@ -86,6 +87,13 @@
                 <!-- 右侧：视图切换与主题 -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
                     <Button
+                        x:Name="HelpButton"
+                        Style="{StaticResource LomaIconButton}"
+                        Click="OnToggleHelp"
+                        ToolTipService.ToolTip="帮助 (F1)">
+                        <FontIcon Glyph="&#xE946;" />
+                    </Button>
+                    <Button
                         x:Name="GraphToggleButton"
                         Style="{StaticResource LomaIconButton}"
                         Click="OnToggleGraph"
@@ -129,6 +137,29 @@
                     </Grid>
                 </Border>
                 <local:GraphPage x:Name="GraphPage" Grid.Row="1" />
+            </Grid>
+
+            <!-- 帮助覆盖层：内嵌浏览 CDLG 参考手册(由生成器产出的自包含 HTML,
+                 以嵌入资源打进程序集)。按 F1 或点工具栏帮助按钮切换。 -->
+            <Grid
+                x:Name="HelpOverlay"
+                Background="{ThemeResource LomaDeskGradient}"
+                Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Padding="12,8" Background="{ThemeResource LomaBarFace}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Text="帮助 · CDLG 参考手册" Style="{StaticResource LomaSectionTitle}" VerticalAlignment="Center" />
+                        <Button
+                            Grid.Column="2"
+                            Content="返回编辑"
+                            Click="OnToggleHelp"
+                            Style="{StaticResource LomaButton}" />
+                    </Grid>
+                </Border>
+                <WebView2 x:Name="HelpWebView" Grid.Row="1" />
             </Grid>
 
             <!-- 这两条是工具栏与状态栏投在内容区上的影。

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDLG 对话脚本语言 · 完全参考手册</title>
+<style>
+:root {
+  --paper: #f2efe9;
+  --card: #faf8f4;
+  --ink: #2e2a26;
+  --ink-2: #5c564e;
+  --ink-3: #8d867c;
+  --accent: #b03a2e;
+  --accent-soft: #e8cfca;
+  --edge: #e2ddd3;
+  --code-bg: #f7f4ee;
+  --thread: #c9c2b6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1d1b18;
+    --card: #26231f;
+    --ink: #e8e2d8;
+    --ink-2: #b3ab9e;
+    --ink-3: #7d766b;
+    --accent: #e08d80;
+    --accent-soft: #4a2f2b;
+    --edge: #3a352e;
+    --code-bg: #2b2823;
+    --thread: #57504a;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.75 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+}
+#layout { display: flex; min-height: 100vh; }
+aside#toc {
+  position: sticky; top: 0; align-self: flex-start;
+  width: 260px; min-width: 260px; height: 100vh; overflow-y: auto;
+  padding: 22px 14px;
+  background: var(--card);
+  border-right: 1px solid var(--edge);
+}
+#toc h1 { font-size: 17px; margin: 0 10px 4px; }
+#toc .sub { font-size: 12px; color: var(--ink-3); margin: 0 10px 14px; line-height: 1.5; }
+#toc nav a {
+  display: block; padding: 7px 10px; margin: 2px 0;
+  color: var(--ink-2); text-decoration: none;
+  border-left: 3px solid transparent; border-radius: 0 8px 8px 0;
+  font-size: 13.5px;
+}
+#toc nav a:hover { background: var(--edge); color: var(--ink); }
+#toc nav a.active { border-left-color: var(--accent); color: var(--accent); font-weight: 600; }
+main { flex: 1; min-width: 0; padding: 28px 44px 80px; max-width: 920px; }
+main header { border-bottom: 1px solid var(--edge); padding-bottom: 14px; margin-bottom: 26px; }
+main header h1 { font-size: 26px; margin: 0 0 4px; }
+main header .sub { color: var(--ink-3); font-size: 13px; }
+section.chapter { scroll-margin-top: 20px; }
+section.chapter h2 { font-size: 21px; margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--edge); }
+section.chapter h3 { font-size: 17px; margin: 24px 0 8px; }
+section.chapter h4 { font-size: 15px; margin: 18px 0 6px; }
+section.chapter p { margin: 8px 0; }
+section.chapter a { color: var(--accent); }
+section.chapter blockquote {
+  margin: 10px 0; padding: 10px 14px;
+  background: var(--card); border-left: 4px solid var(--accent-soft);
+  border-radius: 0 10px 10px 0; color: var(--ink-2);
+}
+section.chapter code {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 13px; background: var(--code-bg);
+  padding: 1px 5px; border-radius: 5px; border: 1px solid var(--edge);
+}
+section.chapter pre {
+  background: var(--card); border: 1px solid var(--edge); border-radius: 12px;
+  padding: 14px 16px; overflow-x: auto; margin: 12px 0;
+}
+section.chapter pre code { background: none; border: none; padding: 0; font-size: 13px; line-height: 1.6; }
+section.chapter table {
+  border-collapse: collapse; margin: 12px 0; width: 100%;
+  font-size: 13.5px; background: var(--card);
+  border: 1px solid var(--edge); border-radius: 10px; overflow: hidden;
+}
+section.chapter th, section.chapter td {
+  text-align: left; padding: 7px 12px;
+  border-bottom: 1px solid var(--edge); vertical-align: top;
+}
+section.chapter th { background: var(--edge); font-weight: 600; }
+section.chapter tr:last-child td { border-bottom: none; }
+section.chapter ul, section.chapter ol { margin: 8px 0; padding-left: 26px; }
+section.chapter li { margin: 3px 0; }
+#top-link {
+  position: fixed; right: 22px; bottom: 22px;
+  background: var(--accent); color: #fff; text-decoration: none;
+  padding: 8px 14px; border-radius: 20px; font-size: 13px; opacity: .9;
+}
+#top-link:hover { opacity: 1; }
+@media (max-width: 860px) {
+  #layout { flex-direction: column; }
+  aside#toc { position: static; width: auto; height: auto; border-right: none; border-bottom: 1px solid var(--edge); }
+  main { padding: 20px; }
+}
+</style>
+</head>
+<body>
+<div id="layout">
+<aside id="toc">
+  <h1>CDLG 对话脚本语言 · 完全参考手册</h1>
+  <p class="sub">Conversations Dialogue Script — 格式 · 语法 · 字段 · 操作 · 原理</p>
+  <nav><a href="#ch-index">CDLG 对话脚本语言 · 完全参考手册</a><a href="#ch-01-intro">01 · 简介</a><a href="#ch-02-quickstart">02 · 快速开始</a><a href="#ch-03-format">03 · 格式与语法</a><a href="#ch-04-instructions">04 · 指令类型与字段</a><a href="#ch-05-nodes">05 · 节点与入口</a><a href="#ch-06-editor">06 · 编辑器操作指南</a><a href="#ch-07-internals">07 · 原理</a><a href="#ch-08-faq">08 · 常见问题</a></nav>
+</aside>
+<main>
+  <header>
+    <h1>CDLG 对话脚本语言 · 完全参考手册</h1>
+    <div class="sub">Conversations Dialogue Script — 格式 · 语法 · 字段 · 操作 · 原理</div>
+  </header>
+  <section class="chapter" id="ch-index"><h1>CDLG 对话脚本语言 · 完全参考手册</h1>
+<blockquote><strong>Conversations Dialogue Script</strong> —— Eraphanis 工程 <code>libs/cdlg</code> 使用的对话脚本语言,以及它的可视化编辑器 <strong>VisualDialoguer</strong> 的完整帮助文档。</blockquote>
+<p>本手册面向脚本作者、编辑器使用者与想要理解 CDLG 工作原理的开发者。所有语法、字段与校验规则均与 <code>VisualDialoguer.Core</code> 的实现一一对应,不凭空发挥。</p>
+<h2>章节导航</h2>
+<table><thead><tr><th>#</th><th>章节</th><th>内容</th></tr></thead><tbody><tr><td>01</td><td><a href="#ch-01-intro" class="doc-link">简介</a></td><td>CDLG 是什么、设计目标、与 Eraphanis 游戏工程的关系</td></tr><tr><td>02</td><td><a href="#ch-02-quickstart" class="doc-link">快速开始</a></td><td>十分钟写出第一个对话脚本,并用编辑器打开、保存、运行</td></tr><tr><td>03</td><td><a href="#ch-03-format" class="doc-link">格式与语法</a></td><td>完整语法参考:块结构、三级缩进、注释、转义、分隔符</td></tr><tr><td>04</td><td><a href="#ch-04-instructions" class="doc-link">指令类型与字段</a></td><td>8 种指令的语法、字段、示例与校验规则</td></tr><tr><td>05</td><td><a href="#ch-05-nodes" class="doc-link">节点与入口</a></td><td>节点 id 规则、入口节点、goto / choice 引用语义</td></tr><tr><td>06</td><td><a href="#ch-06-editor" class="doc-link">编辑器操作指南</a></td><td>界面布局、工作台三栏、筛选、快捷键、校验、流程图</td></tr><tr><td>07</td><td><a href="#ch-07-internals" class="doc-link">原理</a></td><td>解析、序列化、校验、撤销重做、流程图渲染的实现原理</td></tr><tr><td>08</td><td><a href="#ch-08-faq" class="doc-link">常见问题</a></td><td>兼容性、已知限制、排错</td></tr></tbody></table>
+<h2>一句话速览</h2>
+<pre><code>dialogue opening
+  entry start
+  node start
+    speaker 旅店老板
+    line 欢迎来到云雾镇,旅行者。
+    choice &quot;打听传闻&quot; -&gt; rumor
+    choice &quot;直接出发&quot; -&gt; leave
+  end
+  node rumor
+    line 据说北边的古堡最近闹鬼。
+    goto leave
+  end
+  node leave
+    line 一路小心。
+    end
+end</code></pre>
+<p><code>dialogue</code> 定义一个脚本块,<code>node</code> 定义一个节点(一串顺序执行的指令),<code>entry</code> 指明入口节点,<code>end</code> 结束块。编辑器读得懂、改得动、存得回这样的文本;Eraphanis 的 <code>libs/cdlg</code> 解析器与 Session 运行时也能直接加载编辑器写出的文件。</p>
+<h2>文档生成与导出</h2>
+<p>本手册的 Markdown 源文件位于仓库 <code>docs/</code> 目录。可以用生成器一键导出为静态网站:</p>
+<pre><code>python tools/build_docs.py</code></pre>
+<p>产物为单文件自包含 HTML(内嵌样式与导航),可用浏览器直接打开,也可以部署到任意静态托管。</p></section>
+<section class="chapter" id="ch-01-intro"><h1>01 · 简介</h1>
+<h2>CDLG 是什么</h2>
+<p><strong>CDLG</strong>(Conversations Dialogue Script)是 Eraphanis 工程里驱动游戏对话的脚本语言。对话以<strong>脚本块</strong>的形式写在 <code>.cdlg</code> 文本文件里,由 <code>libs/cdlg</code> 解析器读取,交给 Session 运行时驱动 NPC 对话、分支选项与剧情跳转。</p>
+<p>一个对话脚本由三样东西组成:</p>
+<ol><li><strong>脚本块(<code>dialogue</code>)</strong>——一段完整对话的容器,有自己的 id;</li><li><strong>节点(<code>node</code>)</strong>——一串按顺序执行的指令,是对话的"场景单元";</li><li><strong>指令(instruction)</strong>——最小动作,例如"某人说了一句话"、"给出一个选项"、"跳去某个节点"。</li></ol>
+<p>脚本内所有跳转都以<strong>节点 id</strong> 为目标。结构是树状的,数据流是跳转驱动的。</p>
+<h2>VisualDialoguer 的角色</h2>
+<p><strong>VisualDialoguer</strong> 是 CDLG 的可视化编辑器(Windows 桌面程序,C# / WinUI 3):</p>
+<ul><li>把 <code>.cdlg</code> 文本解析成结构化的节点 / 指令模型,以<strong>三栏工作台</strong>(节点 / 指令 / 属性)编辑;</li><li>提供<strong>流程图覆盖层</strong>,把节点与 <code>goto</code> / <code>choice</code> 连线画成规则网格;</li><li>提供<strong>校验(F5)</strong>与解析报告,在保存前拦住结构错误;</li><li>写出的文件与 <code>libs/cdlg</code> 解析器、Session 运行时<strong>直接兼容</strong>。</li></ul>
+<pre><code>.cdlg 文本 ──解析──▶ 内存模型 ──编辑──▶ 内存模型 ──序列化──▶ .cdlg 文本
+                        ▲                                    │
+                        └────────── 校验 / 流程图 ◀───────────┘</code></pre>
+<h2>设计目标</h2>
+<ul><li><strong>人类可读</strong>:CDLG 是行式文本,缩进表达层级,<code>#</code> 写注释,任何文本编辑器都能改;</li><li><strong>机器可靠</strong>:三级缩进规则严格,序列化输出与解析器约定完全一致,写出的文件必然能读回;</li><li><strong>可脚本化</strong>:整个对话是纯文本,可以放进版本控制、做 diff、参与自动化流程;</li><li><strong>编辑器友好</strong>:结构规整,适合可视化的节点—连线呈现。</li></ul>
+<h2>与 Eraphanis 工程的关系</h2>
+<ul><li>语法与缩进规范与 <code>libs/cdlg</code> 解析器(<strong>Parser.cpp</strong>)保持一致;</li><li>编辑器写出的转义、缩进、选项分隔符(归一化为 <code>-&gt;</code>)是解析器的<strong>合法输入</strong>;</li><li>结构校验规则与 <code>libs/cdlg/src/Parser.cpp</code> 的检查一致(入口存在、id 不重复、节点非空壳、跳转目标存在)。</li></ul>
+<blockquote>VisualDialoguer 项目本身已从 Eraphanis 仓库独立出来,不共享任何构建;两者只通过 <code>.cdlg</code> 文本这一种格式交互。</blockquote>
+<h2>支持范围</h2>
+<ul><li>编辑器只<strong>编辑每个文件里的首个 <code>dialogue</code> 块</strong>;文件里其余块会被原样保留,保存时写回(详见 <a href="#ch-08-faq" class="doc-link">08 · 常见问题</a>);</li><li>流程图是<strong>按节点顺序计算的规则网格</strong>,不支持手动拖动布局;</li><li>文本格式:序列化输出 <strong>UTF-8 无 BOM、LF 换行</strong>;解析时 BOM、CRLF、<code>\r</code> 都能容忍。</li></ul></section>
+<section class="chapter" id="ch-02-quickstart"><h1>02 · 快速开始</h1>
+<h2>1. 准备一个 <code>.cdlg</code> 文件</h2>
+<p>用任何文本编辑器创建 <code>hello.cdlg</code>,内容如下(缩进 2 或 4 空格均可,但<strong>层级</strong>必须正确,见 <a href="#ch-03-format" class="doc-link">03 · 格式与语法</a>):</p>
+<pre><code>dialogue opening
+  entry start
+  node start
+    speaker 旅店老板
+    line 欢迎来到云雾镇,旅行者。
+    choice 打听传闻 -&gt; rumor
+    choice 直接出发 -&gt; leave
+  end
+  node rumor
+    line 据说北边的古堡最近闹鬼。
+    goto leave
+  end
+  node leave
+    line 一路小心。
+    end
+end</code></pre>
+<p>保存文件(UTF-8 编码即可;编辑器对 BOM、CRLF 都宽容)。</p>
+<h2>2. 用 VisualDialoguer 打开</h2>
+<p>启动编辑器,点工具栏 <strong>打开</strong> 按钮(或 <code>Ctrl+O</code>),选择 <code>hello.cdlg</code>。</p>
+<ul><li>左侧<strong>节点栏</strong>出现三个节点:<code>start</code>、<code>rumor</code>、<code>leave</code>;</li><li>左侧第一个节点自动被选中,中栏显示它的指令列表;</li><li>状态栏显示:节点数、指令数、撤销 / 重做深度。</li></ul>
+<h2>3. 浏览与编辑</h2>
+<ul><li>点中栏任意指令,右侧<strong>属性面板</strong>显示该指令的字段,直接改;</li><li>点左侧节点栏下方的 <strong>＋</strong> 新建节点;点 <strong>★</strong> 把选中节点设为入口;</li><li>在节点内选中指令后,可用中栏的 <strong>上移 / 下移</strong> 调整顺序,或 <strong>删除</strong>;</li><li>所有改动实时反映到状态栏的未保存标记(标题前的 <code>*</code>)。</li></ul>
+<h2>4. 校验</h2>
+<p>按 <code>F5</code>(或工具栏 <strong>校验</strong> 按钮)运行结构校验:</p>
+<ul><li>校验通过:状态栏显示"校验通过:没有发现问题。";</li><li>发现问题:弹出校验报告,逐条列出(如"入口节点 'x' 不存在")。</li></ul>
+<p>校验规则完整清单见 <a href="#ch-04-instructions" class="doc-link">04 · 指令类型与字段</a> 与 <a href="#ch-05-nodes" class="doc-link">05 · 节点与入口</a>。</p>
+<h2>5. 看流程图</h2>
+<p>按 <code>Ctrl+F</code>(或工具栏 <strong>流程图</strong> 按钮)打开流程图覆盖层:</p>
+<ul><li>每个节点是一张索引卡,卡片左侧的<strong>书脊</strong>颜色取自该节点第一条指令的语义色;</li><li>入口节点卡片的书脊与标题用签名色,并带 <code>★</code> 前缀;</li><li><code>choice</code> / <code>goto</code> 指令画成卡片之间的<strong>牵线</strong>,带箭头;<code>choice</code> 的选项文本做成压在连线中点的小纸片;</li><li>点某张卡片,覆盖层关闭,工作台选中该节点。</li></ul>
+<h2>6. 保存</h2>
+<p>按 <code>Ctrl+S</code> 保存。若文件还没存过盘,会弹出保存对话框,默认文件名是脚本 id + <code>.cdlg</code>。</p>
+<p>编辑器保存时输出 <strong>UTF-8 无 BOM、LF 换行</strong>的文本——Eraphanis 的 <code>libs/cdlg</code> 解析器可以直接加载。</p>
+<h2>7. 快捷键速查</h2>
+<table><thead><tr><th>快捷键</th><th>动作</th></tr></thead><tbody><tr><td><code>Ctrl+N</code></td><td>新建空白脚本</td></tr><tr><td><code>Ctrl+O</code></td><td>打开 <code>.cdlg</code> / <code>.txt</code> 文件</td></tr><tr><td><code>Ctrl+S</code></td><td>保存</td></tr><tr><td><code>Ctrl+Shift+S</code></td><td>另存为</td></tr><tr><td><code>F5</code></td><td>校验脚本</td></tr><tr><td><code>Ctrl+F</code></td><td>切换流程图覆盖层</td></tr><tr><td><code>Ctrl+Z</code></td><td>撤销</td></tr><tr><td><code>Ctrl+Y</code></td><td>重做</td></tr></tbody></table>
+<h2>下一个脚本</h2>
+<ul><li>想系统了解语法 → 读 <a href="#ch-03-format" class="doc-link">03 · 格式与语法</a>;</li><li>想逐条弄清 8 种指令 → 读 <a href="#ch-04-instructions" class="doc-link">04 · 指令类型与字段</a>。</li></ul></section>
+<section class="chapter" id="ch-03-format"><h1>03 · 格式与语法</h1>
+<p>CDLG 是<strong>行式、缩进敏感</strong>的文本格式。本章给出完整语法参考,全部规则与 <code>VisualDialoguer.Core</code> 的解析器(<code>CdlgFormat.Parse</code>)一一对应。</p>
+<h2>3.1 块结构</h2>
+<p>一个 <code>.cdlg</code> 文件可以包含<strong>一个或多个</strong> <code>dialogue</code> 块。每个块是:</p>
+<pre><code>dialogue &lt;id&gt;          ← 脚本块开始(缩进 0)
+  entry &lt;node-id&gt;      ← 入口节点(缩进 2,可选)
+  node &lt;node-id&gt;       ← 节点开始(缩进 2)
+    指令...            ← 指令(缩进 4)
+  end                  ← 节点块结束(缩进 2)
+end                    ← 脚本块结束(缩进 0)</code></pre>
+<table><thead><tr><th>层级</th><th>加权宽度</th><th>允许的命令</th></tr></thead><tbody><tr><td>0(顶层)</td><td><code>indentWidth == 0</code></td><td><code>dialogue &lt;id&gt;</code>、<code>end</code></td></tr><tr><td>1(脚本块内)</td><td><code>1 ≤ indentWidth ≤ 2</code></td><td><code>entry &lt;id&gt;</code>、<code>node &lt;id&gt;</code>、<code>end</code></td></tr><tr><td>2(节点块内)</td><td><code>indentWidth ≥ 3</code></td><td>8 种指令(见 <a href="#ch-04-instructions" class="doc-link">04</a>)</td></tr></tbody></table>
+<blockquote><strong>层级由"加权宽度"决定,不是由空格个数直接决定</strong>:每个空格权重 1,每个 <strong>Tab 权重 2</strong>(因为 cdlg 一级缩进就是 2 空格,一个 Tab 顶一级)。所以:  - 2 空格 → 层级 1;4 空格 → 层级 2; - 1 个 Tab → 层级 1;2 个 Tab → 层级 2; - 缩进宽度 <strong>3 及以上</strong>(无论怎么凑)一律按层级 2 处理。  空格与 Tab 可以混用,只要"加权宽度"落在正确区间。<strong>层级错了,命令就放错了位置</strong>,解析器会报"命令出现在 dialogue/node 块之外"。</blockquote>
+<h2>3.2 语法单元</h2>
+<h3>dialogue 块</h3>
+<ul><li><code>dialogue &lt;id&gt;</code>:开始一个脚本块,<code>&lt;id&gt;</code> 是该脚本的标识,缺 id 报错;</li><li>块内依次可以有 <code>entry</code> 与任意多个 <code>node</code>;</li><li>顶层 <code>end</code>:结束当前脚本块(解析器此刻清空"当前脚本/当前节点"上下文);</li><li>一个文件多个 <code>dialogue</code> 块依次解析,依次序列化。</li></ul>
+<h3>entry 与 node</h3>
+<ul><li><code>entry &lt;node-id&gt;</code>:声明入口节点。缺 id 报错。<strong>入口节点必须真实存在</strong>,否则校验不过(见 <a href="#ch-05-nodes" class="doc-link">05</a>);</li><li><code>node &lt;node-id&gt;</code>:开始一个节点。缺 id 报错;</li><li>层级 1 的 <code>end</code>:结束当前节点块。</li></ul>
+<h3>指令行</h3>
+<ul><li>层级 2 的行是一条指令;</li><li>指令<strong>必须出现在节点块内</strong>,否则报"指令 'x' 出现在 node 块之外";</li><li>指令末尾的 <code>end</code>:结束当前节点块(相当于"对话到这里结束")。</li></ul>
+<h2>3.3 注释与空白</h2>
+<p>解析器对空白与注释非常宽容:</p>
+<ul><li><strong>注释</strong>:一行的正文(去掉缩进后)以 <code>#</code> 开头,整行跳过;</li><li><strong>空行</strong>:跳过;</li><li><strong>BOM</strong>:文件开头的单个 U+FEFF 字符被跳过(注意只跳一个字符,不会误吃正文);</li><li><strong>换行</strong>:<code>\r\n</code>、单独 <code>\r</code> 都会先归一化为 <code>\n</code> 再按行切分;</li><li><strong>行尾空白</strong>:每行正文会去掉行尾的空格与 Tab。</li></ul>
+<h2>3.4 命令与参数的拆分</h2>
+<ul><li>命令名是行首第一个空白(空格或 Tab)之前的部分;</li><li>参数是命令名之后、去掉首尾空白的剩余文本;</li><li><code>set</code> / <code>emit</code> 用<strong>首词拆分</strong>:第一个词是键 / 信号 id,剩余部分是值 / payload。</li></ul>
+<h2>3.5 转义</h2>
+<p>指令的参数(说话人、台词、选项标签、set 值、emit payload)支持转义,序列化与解析<strong>双向往返</strong>:</p>
+<table><thead><tr><th>转义序列</th><th>含义</th></tr></thead><tbody><tr><td><code>\n</code></td><td>换行</td></tr><tr><td><code>\t</code></td><td>制表符</td></tr><tr><td><code>\r</code></td><td>回车</td></tr><tr><td><code>\\</code></td><td>反斜杠本身</td></tr><tr><td><code>\&quot;</code></td><td>双引号</td></tr></tbody></table>
+<ul><li><strong>未知转义</strong>(如 <code>\x</code>)解析时<strong>保留反斜杠原样</strong>(<code>\x</code> 两个字符都保留);</li><li>转义是<strong>按字符</strong>处理的,不限于特定字段——<code>speaker</code>、<code>line</code>、<code>choice</code> 标签、<code>set</code> 值、<code>emit</code> payload 都走同一套转义;</li><li><code>goto</code> / <code>choice</code> 的<strong>目标节点 id</strong>、<code>set</code> / <code>clear</code> 的<strong>标志名</strong>、<code>emit</code> 的<strong>信号 id</strong> 不转义(它们是按词切分的标识符,含空白就切碎了)。</li></ul>
+<h2>3.6 choice 的选项分隔符</h2>
+<p><code>choice</code> 指令用一个分隔符把"选项标签"与"目标节点"切开。解析器<strong>两种写法都接受</strong>:</p>
+<pre><code>choice 打听传闻 -&gt; rumor     ← 首选写法(序列化时归一化为这种)
+choice 打听传闻 | rumor      ← 兼容写法(解析也接受)</code></pre>
+<ul><li>解析顺序:先找 <code>-&gt;</code>,找不到再找 <code>|</code>;</li><li>标签与目标都会 <code>Trim</code>;</li><li>标签与目标<strong>都非空</strong>才有效;</li><li><strong>序列化统一输出 <code> -&gt; </code></strong>;</li><li>反过来,<strong>标签本身不能包含 <code>-&gt;</code> 或 <code>|</code></strong>——校验器会拦住(否则保存后读不回)。</li></ul>
+<h2>3.7 序列化输出规范</h2>
+<p>编辑器保存(<code>Ctrl+S</code>)时,按以下规范输出文本:</p>
+<ul><li><strong>编码</strong>:UTF-8,无 BOM;</li><li><strong>换行</strong>:LF(<code>\n</code>);</li><li><strong>缩进</strong>:<code>dialogue</code> 与顶层 <code>end</code> 缩进 0;<code>entry</code>、<code>node</code> 与节点块 <code>end</code> 缩进 2;指令缩进 4;</li><li><strong>字段</strong>:<code>speaker</code> / <code>line</code> / <code>choice</code> 标签 / <code>set</code> 值 / <code>emit</code> payload 均做转义;<code>choice</code> 分隔符归一化为 <code>-&gt;</code>;</li><li>脚本 id 为空时,序列化为 <code>dialogue untitled</code>;</li><li><code>entry</code> 为空时<strong>不输出</strong>该行;</li><li>指令按内存顺序逐条输出;<code>emit</code> 的 payload 为空时不输出空格与 payload。</li></ul>
+<h2>3.8 完整示例</h2>
+<p>一个带注释、多节点、多指令的合法脚本:</p>
+<pre><code># 开场对话 —— 注释可以写在任何层级
+dialogue opening
+  entry start
+  node start
+    speaker 旅店老板
+    line 欢迎来到云雾镇。
+    choice 打听传闻 -&gt; rumor
+    choice 直接出发 -&gt; leave
+  end
+  node rumor
+    line 据说古堡闹鬼。
+    set rumor_heard yes
+    goto leave
+  end
+  node leave
+    line 一路小心。
+    end
+end</code></pre>
+<h2>3.9 解析错误示例</h2>
+<table><thead><tr><th>写法</th><th>问题</th></tr></thead><tbody><tr><td><code>dialogue</code>(缺 id)</td><td><code>dialogue 缺少脚本 id</code></td></tr><tr><td><code>node</code>(缺 id)</td><td><code>node 缺少节点 id</code></td></tr><tr><td>顶层出现 <code>entry</code></td><td><code>顶层命令应为 dialogue &lt;id&gt;,得到 &#x27;entry&#x27;</code></td></tr><tr><td><code>dialogue</code> 块内出现 <code>line</code></td><td><code>dialogue 块内命令应为 entry / node / end,得到 &#x27;line&#x27;</code></td></tr><tr><td>指令出现在节点块外</td><td><code>指令 &#x27;speaker&#x27; 出现在 node 块之外</code></td></tr><tr><td><code>choice 一个选项</code>(无分隔符)</td><td>`choice 格式应为 '<标签> -> <节点>' 或 '<标签></td><td><节点>'`</td></tr><tr><td><code>set 只有键</code></td><td><code>set 格式应为 &#x27;&lt;标志&gt; &lt;值&gt;&#x27;</code></td></tr><tr><td><code>emit</code>(缺信号)</td><td><code>emit 缺少信号 id</code></td></tr><tr><td><code>frobnicate x</code></td><td><code>未知节点指令 &#x27;frobnicate&#x27;</code></td></tr></tbody></table>
+<p>每条解析错误都带<strong>行号</strong>,格式为 <code>第 N 行:消息</code>。编辑器打开文件时,若解析出问题,状态栏会提示数量,按 <code>F5</code> 查看详情。</p></section>
+<section class="chapter" id="ch-04-instructions"><h1>04 · 指令类型与字段</h1>
+<p>CDLG 共 <strong>8 种指令</strong>,类型顺序固定(与 <code>cdlg::InstructionKind</code> 一致,编辑器的类型下拉框也按这个顺序排):</p>
+<table><thead><tr><th>#</th><th>关键字</th><th>显示名</th><th>徽章</th><th>语法</th></tr></thead><tbody><tr><td>0</td><td><code>speaker</code></td><td>说话人 speaker</td><td>说</td><td><code>speaker &lt;name&gt;</code></td></tr><tr><td>1</td><td><code>line</code></td><td>台词 line</td><td>词</td><td><code>line &lt;text&gt;</code></td></tr><tr><td>2</td><td><code>choice</code></td><td>选项 choice</td><td>选</td><td><code>choice &lt;label&gt; -&gt; &lt;node&gt;</code></td></tr><tr><td>3</td><td><code>goto</code></td><td>跳转 goto</td><td>跳</td><td><code>goto &lt;node&gt;</code></td></tr><tr><td>4</td><td><code>set</code></td><td>置标志 set</td><td>置</td><td><code>set &lt;flag&gt; &lt;value&gt;</code></td></tr><tr><td>5</td><td><code>clear</code></td><td>清标志 clear</td><td>清</td><td><code>clear &lt;flag&gt;</code></td></tr><tr><td>6</td><td><code>emit</code></td><td>发信号 emit</td><td>信</td><td><code>emit &lt;signal&gt; [payload]</code></td></tr><tr><td>7</td><td><code>end</code></td><td>结束 end</td><td>止</td><td><code>end</code></td></tr></tbody></table>
+<p>徽章是界面(指令列表、流程图)使用的单字语义标记。</p>
+<p>---</p>
+<h2>4.1 speaker — 说话人</h2>
+<p>设置当前说话人,影响后续 <code>line</code> 的归属。</p>
+<pre><code>speaker 旅店老板
+speaker Narrator</code></pre>
+<table><thead><tr><th>字段</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td><code>Speaker</code></td><td>说话人</td><td>必填;转义字段,支持 <code>\n</code> 等</td></tr></tbody></table>
+<p><strong>校验</strong>:<code>speaker</code> 指令的说话人为空 → <code>节点 &#x27;x&#x27; 的 speaker 指令缺少说话人</code>。</p>
+<h2>4.2 line — 台词</h2>
+<p>输出一句台词。</p>
+<pre><code>line 欢迎来到云雾镇,旅行者。
+line 你可以选择:\n1. 打听\n2. 离开</code></pre>
+<table><thead><tr><th>字段</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td><code>Text</code></td><td>文本</td><td>必填;转义字段</td></tr></tbody></table>
+<p><strong>校验</strong>:<code>line</code> 指令的文本为空 → <code>节点 &#x27;x&#x27; 的 line 指令缺少台词文本</code>。</p>
+<h2>4.3 choice — 选项</h2>
+<p>给玩家一个分支选项,选中后跳转到目标节点。</p>
+<pre><code>choice 打听传闻 -&gt; rumor
+choice 直接出发 | leave        ← 解析也接受 | 分隔</code></pre>
+<table><thead><tr><th>字段</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td><code>Text</code></td><td>选项文本</td><td>必填;转义字段;**不能包含 <code>-&gt;</code> 或 `</td><td>`**</td></tr><tr><td><code>TargetNode</code></td><td>目标节点</td><td>必填;<strong>必须指向存在的节点</strong></td></tr></tbody></table>
+<p><strong>校验</strong>:</p>
+<ul><li>选项文本为空 → <code>节点 &#x27;x&#x27; 的 choice 选项标签不能为空</code>;</li><li>标签包含 <code>-&gt;</code> 或 <code>|</code> → <code>节点 &#x27;x&#x27; 的 choice 标签不能包含分隔符 &#x27;-&gt;&#x27; 或 &#x27;|&#x27;</code>(保存后读不回);</li><li>目标节点为空 → <code>节点 &#x27;x&#x27; 的指令缺少目标节点</code>;</li><li>目标节点不存在 → <code>节点 &#x27;x&#x27; 引用了不存在的节点 &#x27;y&#x27;</code>。</li></ul>
+<h2>4.4 goto — 跳转</h2>
+<p>无条件跳转到目标节点,当前节点到此中断。</p>
+<pre><code>goto leave</code></pre>
+<table><thead><tr><th>字段</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td><code>TargetNode</code></td><td>目标节点</td><td>必填;<strong>必须指向存在的节点</strong></td></tr></tbody></table>
+<p><strong>校验</strong>:同 <code>choice</code> 的目标节点规则(缺目标 / 目标不存在都报错)。</p>
+<h2>4.5 set — 置标志</h2>
+<p>把对话标志(flag)设为一个值。常用于记录剧情状态。</p>
+<pre><code>set rumor_heard yes
+set gold 100</code></pre>
+<table><thead><tr><th>字段</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td><code>FlagKey</code></td><td>标志键</td><td>必填;标识符:非空白、不含空白字符、不能以 <code>#</code> 开头</td></tr><tr><td><code>FlagValue</code></td><td>标志值</td><td>必填;转义字段</td></tr></tbody></table>
+<p><strong>校验</strong>:</p>
+<ul><li>键或值为空 → <code>节点 &#x27;x&#x27; 的 set 指令需要 &lt;标志&gt; &lt;值&gt;</code>;</li><li>键不合法(见下)→ <code>节点 &#x27;x&#x27; 的标志名 &#x27;...&#x27; 不能包含空白字符</code> / <code>不能以 &#x27;#&#x27; 开头</code>。</li></ul>
+<h2>4.6 clear — 清标志</h2>
+<p>清除一个对话标志。</p>
+<pre><code>clear rumor_heard</code></pre>
+<table><thead><tr><th>字段</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td><code>FlagKey</code></td><td>标志键</td><td>必填;标识符规则同 <code>set</code></td></tr></tbody></table>
+<p><strong>校验</strong>:</p>
+<ul><li>标志名为空 → <code>节点 &#x27;x&#x27; 的 clear 指令缺少标志名</code>;</li><li>键不合法 → 同上。</li></ul>
+<h2>4.7 emit — 发信号</h2>
+<p>发出一个游戏信号,可带可选载荷(payload)。用于向游戏运行时广播事件(播放音效、触发演出等),具体语义由 Session 运行时决定。</p>
+<pre><code>emit sfx_door
+emit quest_started 古堡之谜</code></pre>
+<table><thead><tr><th>字段</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td><code>SignalId</code></td><td>信号 ID</td><td>必填;标识符:非空白、不含空白字符、不能以 <code>#</code> 开头</td></tr><tr><td><code>SignalPayload</code></td><td>信号载荷</td><td>可选;为空时序列化不输出;转义字段</td></tr></tbody></table>
+<p><strong>校验</strong>:</p>
+<ul><li>信号 id 为空 → <code>节点 &#x27;x&#x27; 的 emit 指令缺少信号 id</code>;</li><li>信号 id 不合法 → <code>节点 &#x27;x&#x27; 的信号 id &#x27;...&#x27; 不能包含空白字符</code> 等。</li></ul>
+<h2>4.8 end — 结束</h2>
+<p>结束当前节点块(对话到此结束)。<strong>注意</strong>:节点块 <code>end</code> 缩进 2,指令 <code>end</code> 缩进 4,二者是不同层级的东西(见 <a href="#ch-03-format" class="doc-link">03 · 格式与语法</a>)。</p>
+<pre><code>end</code></pre>
+<p>无字段,无专项校验。</p>
+<p>---</p>
+<h2>4.9 标识符规则(flag / signal / 节点 id 通用)</h2>
+<p><code>set</code> / <code>clear</code> 的标志键、<code>emit</code> 的信号 id、节点 id、目标节点引用都按"按词切分的标识符"处理,共享同一套合法性规则:</p>
+<ol><li>不能为空串(各字段的必填检查单独负责报错);</li><li>不能<strong>只含空白字符</strong> → <code>... 只含空白字符</code>;</li><li>不能以 <code>#</code> 开头(会被解析器当注释吃掉)→ <code>... 不能以 &#x27;#&#x27; 开头(会被当作注释)</code>;</li><li>不能<strong>包含任何空白字符</strong>(空格 / Tab / 换行)→ <code>... 不能包含空白字符</code>。</li></ol>
+<blockquote>直观理解:这类字段在行内是"一个词",含空白就切碎了;以 <code>#</code> 开头则整行变成注释。<strong><code>speaker</code> 的人名、<code>line</code> 的台词、<code>choice</code> 的标签、<code>set</code> 的值、<code>emit</code> 的载荷不受此限</strong>(它们可以含空格,用转义处理特殊字符)。</blockquote>
+<h2>4.10 切换指令类型时的字段清理</h2>
+<p>在编辑器里把一条指令<strong>改成另一种类型</strong>时,原来类型的字段会被清空,避免"存出去一半旧一半新":</p>
+<table><thead><tr><th>切换后类型</th><th>保留的字段</th><th>被清空的字段</th></tr></thead><tbody><tr><td><code>speaker</code></td><td><code>Speaker</code></td><td>其余全部</td></tr><tr><td><code>line</code></td><td><code>Text</code></td><td>其余全部</td></tr><tr><td><code>choice</code></td><td><code>Text</code>、<code>TargetNode</code></td><td>其余全部</td></tr><tr><td><code>goto</code></td><td><code>TargetNode</code></td><td>其余全部</td></tr><tr><td><code>set</code></td><td><code>FlagKey</code>、<code>FlagValue</code></td><td>其余全部</td></tr><tr><td><code>clear</code></td><td><code>FlagKey</code></td><td>其余全部</td></tr><tr><td><code>emit</code></td><td><code>SignalId</code>、<code>SignalPayload</code></td><td>其余全部</td></tr><tr><td><code>end</code></td><td>无</td><td>其余全部</td></tr></tbody></table></section>
+<section class="chapter" id="ch-05-nodes"><h1>05 · 节点与入口</h1>
+<h2>5.1 节点是什么</h2>
+<p><code>node</code> 是对话的"场景单元":一串<strong>按顺序执行</strong>的指令。运行时从入口节点开始,顺序执行每条指令,遇到 <code>choice</code> 等待玩家选择后跳转,遇到 <code>goto</code> 无条件跳转,遇到指令 <code>end</code> 则本段对话结束。</p>
+<pre><code>node start
+  speaker 旅店老板
+  line 欢迎来到云雾镇。
+  choice 打听传闻 -&gt; rumor
+  choice 直接出发 -&gt; leave
+end</code></pre>
+<p>节点有三个属性:唯一 <strong>id</strong>、指令列表、以及"是否入口"。</p>
+<h2>5.2 节点 id 规则</h2>
+<ul><li>节点 id 是脚本内的<strong>唯一标识</strong>,<code>goto</code> / <code>choice</code> 全部靠它寻址;</li><li>合法 id 必须满足标识符规则(见 <a href="#ch-04-instructions.md#49--标识符规则flag--signal--节点-id-通用" class="doc-link">04 · 4.9</a>):</li><li>非空;</li><li>不含空白字符(空格 / Tab / 换行);</li><li>不以 <code>#</code> 开头;</li><li>大小写敏感(<code>start</code> ≠ <code>Start</code>),字符串比较为 Ordinal。</li></ul>
+<p><strong>校验</strong>:</p>
+<ul><li>节点 id 重复 → <code>节点 id 重复:&#x27;x&#x27;</code>(两两比对,每对重复都报一次);</li><li>id 不合法 → 按标识符规则报错。</li></ul>
+<h2>5.3 入口节点(entry)</h2>
+<p>每个脚本块可以声明<strong>一个</strong>入口节点,用 <code>entry</code> 指明。运行时从入口节点开始执行对话。</p>
+<pre><code>dialogue opening
+  entry start        ← 入口
+  node start
+  ...
+end</code></pre>
+<p><strong>规则</strong>:</p>
+<ul><li><code>entry</code> 可选;不写也行(序列化时不输出该行);</li><li>但<strong>一旦写了,目标节点必须存在</strong>;</li><li>校验:</li><li>缺少入口 → <code>缺少入口节点(entry)定义</code>;</li><li>入口指向不存在的节点 → <code>入口节点 &#x27;x&#x27; 不存在</code>;</li><li>入口 id 不合法 → 按标识符规则报错。</li></ul>
+<h2>5.4 引用语义:goto / choice</h2>
+<p><code>goto</code> 与 <code>choice</code> 的 <code>TargetNode</code> 是<strong>强引用</strong>——脚本里引用的目标必须在同一脚本块内真实存在:</p>
+<ul><li>目标为空 → <code>节点 &#x27;x&#x27; 的指令缺少目标节点</code>;</li><li>目标不存在 → <code>节点 &#x27;x&#x27; 引用了不存在的节点 &#x27;y&#x27;</code>;</li><li>目标 id 不合法 → 按标识符规则报错。</li></ul>
+<blockquote>编辑器不会自动"补"缺失的节点;校验的作用就是让你在保存前发现断链。流程图里指向不存在目标的连线<strong>画不出来</strong>(渲染时直接跳过),校验报告会告诉你。</blockquote>
+<h2>5.5 节点不能是空壳</h2>
+<p>每个节点至少要有一条指令:</p>
+<ul><li>节点没有任何指令 → <code>节点 &#x27;x&#x27; 没有任何指令</code>。</li></ul>
+<blockquote>新建的节点默认是空壳;在校验通过前,记得给它加指令。</blockquote>
+<h2>5.6 自动命名与重命名</h2>
+<ul><li><strong>自动命名</strong>:编辑器新建节点时,自动生成 <code>node1</code>、<code>node2</code>…(前缀 + 递增数字,直到不重复为止);默认前缀 <code>node</code>。</li><li><strong>重命名</strong>:在编辑器里重命名节点 id 时,<strong>所有引用会同步更新</strong>:</li><li>该节点的 id;</li><li>所有指令里指向旧 id 的 <code>TargetNode</code>(<code>goto</code> / <code>choice</code>);</li><li>脚本的 <code>EntryNodeId</code>(若入口是它);</li><li>当前选中项(若选中的是它)。</li><li>若新 id 已被占用,重命名被拒绝并返回失败。</li></ul>
+<h2>5.7 粘贴节点</h2>
+<p>复制 / 粘贴节点时,粘贴出的节点 id 在原 id 后加 <code>-copy</code> 去重:冲突时依次尝试 <code>-copy-2</code>、<code>-copy-3</code>… 直到不重复。<strong>注意:粘贴的是节点的浅拷贝语义——指令原样复制,但 <code>goto</code> / <code>choice</code> 的目标引用不会改写</strong>(指向谁仍指向谁,不因粘贴而重定向)。</p>
+<h2>5.8 多 dialogue 块</h2>
+<p>一个文件可以含多个 <code>dialogue</code> 块。<strong>编辑器只编辑首个块</strong>:解析时全部块都进模型,但界面只暴露第一个;保存时其余块<strong>原样写回</strong>(不经过编辑器的序列化逻辑,保持字节语义)。</p>
+<blockquote>因此:如果你的 <code>.cdlg</code> 文件里有多段对话,请把需要编辑的那段放在文件最前面。界面不提供切换块的入口(见 <a href="#ch-08-faq" class="doc-link">08 · 常见问题</a>)。</blockquote>
+<h2>5.9 删除节点</h2>
+<p>删除节点时:</p>
+<ul><li>节点从脚本中移除;</li><li>若删除的是入口节点,<strong>入口定义一并清空</strong>(避免留下悬空入口);</li><li>选中项自动移到相邻节点(优先原位置的下一个)。</li></ul></section>
+<section class="chapter" id="ch-06-editor"><h1>06 · 编辑器操作指南</h1>
+<p>VisualDialoguer 是 CDLG 的可视化编辑器(WinUI 3 桌面程序)。本章介绍完整界面与操作。</p>
+<h2>6.1 界面总览</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│ 标题栏(VisaulDialoguer - 文件名)                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│ [新建][打开][保存][另存为] | [校验 F5] [撤销][重做]      [流程图][深浅色] │  ← 工具栏
+├──────────────────┬──────────────────────────┬───────────────────────┤
+│ 节点栏            │ 指令流                     │ 属性面板                │
+│  搜索框           │ 类型下拉 + 搜索 + 筛选chips │ (InstructionEditorPanel)│
+│  节点列表         │ 指令列表(徽章+摘要)         │ 字段编辑区              │
+│  [＋][删除][★]   │ [新增][删除][上移][下移]    │                        │
+├──────────────────┴──────────────────────────┴───────────────────────┤
+│ 状态栏:提示文本 · 节点 N · 指令 M · 撤销 X · 重做 Y                     │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<ul><li><strong>工具栏</strong>:文件操作、校验、撤销重做在左;流程图与深浅色切换在右;</li><li><strong>工作台</strong>:三栏——左<strong>节点栏</strong>、中<strong>指令流</strong>、右<strong>属性面板</strong>;</li><li><strong>状态栏</strong>:左是提示文本(最近一次操作结果),右是统计(节点数、指令数、撤销/重做深度);</li><li><strong>标题栏</strong>:显示文件名;有未保存改动时,标题前有 <code>*</code>。</li></ul>
+<h2>6.2 文件操作</h2>
+<table><thead><tr><th>按钮</th><th>快捷键</th><th>动作</th></tr></thead><tbody><tr><td>新建</td><td><code>Ctrl+N</code></td><td>新建空白脚本(id 为 <code>untitled</code>)</td></tr><tr><td>打开</td><td><code>Ctrl+O</code></td><td>打开 <code>.cdlg</code> / <code>.txt</code> 文件</td></tr><tr><td>保存</td><td><code>Ctrl+S</code></td><td>保存到当前路径;没存过盘则弹出保存对话框(默认文件名:脚本 id + <code>.cdlg</code>)</td></tr><tr><td>另存为</td><td><code>Ctrl+Shift+S</code></td><td>总是弹出保存对话框</td></tr></tbody></table>
+<p>行为细节:</p>
+<ul><li><strong>打开</strong>时,编辑器解析文件;若文件里没有 <code>dialogue</code> 块,状态栏提示"这个文件里没有 dialogue 块。";</li><li>若解析出问题,状态栏提示"已载入,但解析报了 N 个问题(按 F5 看详情)。";</li><li><strong>新建 / 打开前</strong>若有未保存改动,会弹确认对话框(取消则中止操作);</li><li><strong>关闭窗口</strong>时若有未保存改动,同样先确认;</li><li>保存写盘成功后才更新"已保存"基准与路径,状态栏显示"已保存 <路径>"。</li></ul>
+<h2>6.3 节点栏(左栏)</h2>
+<ul><li><strong>搜索框</strong>:按节点 id 过滤列表(不区分大小写);</li><li><strong>节点列表</strong>:每行显示节点 id;入口节点带 <code>★</code>;右侧显示指令条数;</li><li>按钮:</li><li><strong>＋ 新增</strong>:自动命名 <code>node1</code>、<code>node2</code>…(不重复),新节点自动选中;</li><li><strong>删除</strong>:删除选中节点;若它是入口,入口定义一并清空;</li><li><strong>★ 设为入口</strong>:把选中节点设为入口节点。</li></ul>
+<h2>6.4 指令流(中栏)</h2>
+<ul><li><strong>类型下拉(KindPicker)</strong>:选类型后点新增,插入该类型指令;顺序固定为 8 种指令类型;</li><li><strong>搜索框</strong>:按指令摘要、说话人、目标节点过滤;</li><li><strong>筛选 chips(FilterBar)</strong>:<code>全部</code> + 8 个单字徽章(<code>说</code> <code>词</code> <code>选</code> <code>跳</code> <code>置</code> <code>清</code> <code>信</code> <code>止</code>),点一个只显示该类型;</li><li><strong>指令列表</strong>:每行 = 徽章 + 类型名 + 摘要(说话人/文本/目标);</li><li>按钮:<strong>新增</strong>(按下拉类型)、<strong>删除</strong>、<strong>上移</strong>、<strong>下移</strong>;</li><li>选中指令后,右侧属性面板显示其字段。</li></ul>
+<blockquote>筛选 / 搜索时列表只显示子集,但<strong>选中与操作始终作用到真实指令</strong>:列表行保存了真实下标,增删移动不会选错对象。</blockquote>
+<h2>6.5 属性面板(右栏)</h2>
+<p><code>InstructionEditorPanel</code> 按指令类型显示对应字段(顺序与 <code>InstKindInfo.Fields</code> 一致):</p>
+<table><thead><tr><th>指令</th><th>字段</th></tr></thead><tbody><tr><td><code>speaker</code></td><td>说话人</td></tr><tr><td><code>line</code></td><td>文本</td></tr><tr><td><code>choice</code></td><td>选项文本、目标节点</td></tr><tr><td><code>goto</code></td><td>目标节点</td></tr><tr><td><code>set</code></td><td>标志键、标志值</td></tr><tr><td><code>clear</code></td><td>标志键</td></tr><tr><td><code>emit</code></td><td>信号 ID、信号载荷</td></tr><tr><td><code>end</code></td><td>(无字段)</td></tr></tbody></table>
+<ul><li>字段<strong>就地编辑</strong>,改完即生效(标题栏 <code>*</code> 出现);</li><li>属性编辑采用<strong>焦点式撤销</strong>:进入字段时取快照,失焦且有改动时压入撤销栈——不会出现逐键撤销把撤销栈塞满的情况;</li><li>切换指令类型时,无关字段被清空(见 <a href="#ch-04-instructions.md#410--切换指令类型时的字段清理" class="doc-link">04 · 4.10</a>)。</li></ul>
+<h2>6.6 校验(F5)</h2>
+<p>按 <code>F5</code> 或点工具栏 <strong>校验</strong>:</p>
+<ul><li>通过:状态栏"校验通过:没有发现问题。";</li><li>有问题:弹出校验报告,逐条列出(如 <code>节点 &#x27;x&#x27; 引用了不存在的节点 &#x27;y&#x27;</code>),状态栏同时显示摘要。</li></ul>
+<p>校验规则清单见 <a href="#ch-04-instructions" class="doc-link">04</a> 与 <a href="#ch-05-nodes" class="doc-link">05</a>。<strong>解析错误</strong>(打开文件时报的)与<strong>结构校验错误</strong>(F5 报的)是两回事:前者是文件读不进,后者是结构不合法。</p>
+<h2>6.7 撤销 / 重做</h2>
+<ul><li><code>Ctrl+Z</code> 撤销,<code>Ctrl+Y</code> 重做(工具栏也有按钮);</li><li>实现为<strong>整份快照</strong>,容量 <strong>50 层</strong>(超出丢最旧的);</li><li>撤销栈 / 重做栈深度实时显示在状态栏;</li><li>属性面板的<strong>逐键输入不入栈</strong>(见 6.5);</li><li>新建 / 载入会清空历史。</li></ul>
+<h2>6.8 剪贴板:指令与节点两级</h2>
+<table><thead><tr><th>动作</th><th>说明</th></tr></thead><tbody><tr><td>复制指令</td><td>复制选中指令的深拷贝</td></tr><tr><td>剪切指令</td><td>复制 + 删除</td></tr><tr><td>粘贴指令</td><td>追加到当前节点末尾并选中</td></tr><tr><td>复制节点</td><td>复制选中节点(含全部指令)</td></tr><tr><td>剪切节点</td><td>复制 + 删除</td></tr><tr><td>粘贴节点</td><td>插入副本,id 自动改为 <code>原id-copy</code>(冲突则 <code>-copy-2</code>…)</td></tr></tbody></table>
+<p>节点剪贴板与指令剪贴板<strong>相互独立</strong>(两级剪贴板)。粘贴节点时 <code>goto</code>/<code>choice</code> 的引用<strong>不重定向</strong>。</p>
+<h2>6.9 流程图(Ctrl+F)</h2>
+<p>按 <code>Ctrl+F</code> 或点工具栏 <strong>流程图</strong> 打开覆盖层:</p>
+<ul><li>节点按<strong>顺序排成 3 列规则网格</strong>(每列宽 = 卡宽 + 间距,每行高 = 卡高 + 间距),自上而下、从左到右;</li><li>每张卡:柔影 → 卡面 → <strong>书脊</strong>(颜色取节点第一条指令的语义色;入口节点用签名色)→ 标题与指令条数;</li><li>入口节点标题带 <code>★</code>,文字用签名色;</li><li><code>choice</code> / <code>goto</code> 画成<strong>牵线</strong>:源卡右侧中点 → 目标卡左侧中点,带三角箭头;<code>choice</code> 的标签是压在连线中点的小纸片,<code>goto</code> 标 <code>goto</code>;</li><li>目标节点不存在的连线<strong>画不出来</strong>(校验会报);</li><li><strong>点任意卡片</strong>:覆盖层关闭,工作台选中该节点;</li><li>再次按 <code>Ctrl+F</code>(或点右上角关闭按钮)关闭覆盖层。</li></ul>
+<p>流程图是<strong>算出来的,不是拖出来的</strong>——脚本一改,图就重画,不会出现"图和脚本对不上"。</p>
+<h2>6.10 深浅色主题</h2>
+<p>工具栏最右侧 <strong>切换深浅色</strong> 按钮:</p>
+<ul><li>在浅色 / 深色之间切换,即时生效;</li><li>标题栏、工作台、流程图全部跟随(流程图是代码逐笔绘制,主题切换时会重画);</li><li>主题来自独立的 <strong>Loma</strong> 主题库(<code>Loma.Theme</code>,WinUI 类库)。</li></ul>
+<h2>6.11 快捷键总表</h2>
+<table><thead><tr><th>快捷键</th><th>动作</th></tr></thead><tbody><tr><td><code>Ctrl+N</code></td><td>新建</td></tr><tr><td><code>Ctrl+O</code></td><td>打开</td></tr><tr><td><code>Ctrl+S</code></td><td>保存</td></tr><tr><td><code>Ctrl+Shift+S</code></td><td>另存为</td></tr><tr><td><code>F5</code></td><td>校验</td></tr><tr><td><code>Ctrl+Z</code></td><td>撤销</td></tr><tr><td><code>Ctrl+Y</code></td><td>重做</td></tr><tr><td><code>Ctrl+F</code></td><td>切换流程图覆盖层</td></tr></tbody></table>
+<h2>6.12 文件格式约定</h2>
+<ul><li>保存:UTF-8 <strong>无 BOM</strong>、LF 换行;</li><li>打开兼容:<code>.cdlg</code> 与 <code>.txt</code>;BOM / CRLF 都能吃;</li><li>默认扩展名 <code>.cdlg</code>。</li></ul></section>
+<section class="chapter" id="ch-07-internals"><h1>07 · 原理</h1>
+<p>本章讲 VisualDialoguer 内部是如何工作的。源码按职责分三层:</p>
+<pre><code>VisualDialoguer.Core   模型 / 解析 / 序列化 / 编辑状态(不依赖 UI)
+VisualDialoguer.Theme  Loma 主题库(独立 WinUI 类库)
+VisualDialoguer.App    界面(主窗口 / 工作台 / 流程图 / 属性面板)</code></pre>
+<h2>7.1 解析原理(CdlgFormat.Parse)</h2>
+<p>解析器把 <code>.cdlg</code> 文本变成内存模型(<code>List&lt;DialogueScript&gt;</code>),并按行收集解析问题。</p>
+<h3>预处理</h3>
+<ol><li>若开头是 U+FEFF(BOM),<strong>只跳这一个字符</strong>(U+FEFF 是一个字符不是三个字节,跳三个会把正文头两个字吃掉);</li><li>把 <code>\r\n</code> 与单独 <code>\r</code> 全部归一化为 <code>\n</code>,再按 <code>\n</code> 切行。</li></ol>
+<h3>逐行切分</h3>
+<p>每一行计算两个数:</p>
+<ul><li><code>whitespaceCount</code>:前导空白字符数(用来切掉缩进拿到正文);</li><li><code>indentWidth</code>:<strong>加权宽度</strong>——空格 +1,Tab +2。这是为了把 Tab 正确折算进层级(一级缩进 = 2 空格,一个 Tab 顶一级)。</li></ul>
+<p>然后:</p>
+<ul><li>去掉行尾空白;</li><li>正文为空或以 <code>#</code> 开头 → 跳过(注释与空行);</li><li>按加权宽度算层级:<code>0 → 层级 0</code>,<code>1~2 → 层级 1</code>,<code>3+ → 层级 2</code>。</li></ul>
+<h3>状态机</h3>
+<p>解析器只维护两个状态:<strong>当前脚本</strong>(<code>current</code>)与<strong>当前节点</strong>(<code>currentNode</code>),按层级分派:</p>
+<table><thead><tr><th>层级</th><th>命令</th><th>行为</th></tr></thead><tbody><tr><td>0</td><td><code>dialogue &lt;id&gt;</code></td><td>建脚本,加入列表,重置节点上下文</td></tr><tr><td>0</td><td><code>end</code></td><td>关闭当前脚本(清空两个状态)</td></tr><tr><td>1</td><td><code>entry &lt;id&gt;</code></td><td>写 <code>EntryNodeId</code></td></tr><tr><td>1</td><td><code>node &lt;id&gt;</code></td><td>建节点并追加到当前脚本</td></tr><tr><td>1</td><td><code>end</code></td><td>关闭当前节点</td></tr><tr><td>2</td><td>8 种指令</td><td>追加指令(命令名由首个空白切出,参数 Trim)</td></tr></tbody></table>
+<p>参数解析细节:</p>
+<ul><li><code>speaker</code> / <code>line</code>:整段参数 <code>Unescape</code>;</li><li><code>choice</code>:先找 <code>-&gt;</code>,再找 <code>|</code>,切出标签与目标,两边 Trim,标签与目标都非空才有效;</li><li><code>set</code>:首词拆键,剩余为值;</li><li><code>emit</code>:首词拆信号 id,剩余为可选 payload;</li><li>每条指令都做<strong>必填检查</strong>,缺了就记一条 <code>FormatIssue(行号, 消息)</code>。</li></ul>
+<h3>宽容但认得同一套语法</h3>
+<p>解析器对<strong>空白形态</strong>宽容(BOM、CRLF、Tab、空行、注释),但对<strong>结构</strong>严格(层级错、命令错都报行号)。这样设计让"人写的"和"编辑器写的"文件都能读进来,同时坏结构不会静默产生错误模型。</p>
+<h2>7.2 序列化原理(CdlgFormat.Serialize)</h2>
+<p>序列化是解析的逆过程,逐脚本、逐节点、逐指令写出,严格对齐解析器约定:</p>
+<ul><li>脚本 id 为空 → <code>dialogue untitled</code>;</li><li><code>entry</code> 为空 → 不输出;</li><li>节点:缩进 2 的 <code>node &lt;id&gt;</code>;</li><li>指令:缩进 4;<code>speaker</code> / <code>line</code> / <code>choice</code> 标签 / <code>set</code> 值 / <code>emit</code> payload 走 <code>Escape</code>;</li><li><code>choice</code> 分隔符<strong>归一化为 <code> -&gt; </code></strong>;</li><li>节点块 <code>end</code> 缩进 2,脚本块 <code>end</code> 缩进 0;</li><li>多脚本块依次写出。</li></ul>
+<p>编码:UTF-8 无 BOM + LF,由 App 层 <code>SaveFileAsync</code> 负责写入(<code>new UTF8Encoding(false)</code>)。</p>
+<h2>7.3 校验原理(DialogueModel.Validate)</h2>
+<p><code>Validate</code> 返回字符串列表,空列表 = 通过。检查顺序:</p>
+<ol><li><strong>入口</strong>:缺失 → 报;指向不存在 → 报;</li><li><strong>标识符</strong>:脚本 id、入口 id、每个节点 id、goto/choice 目标、set/clear 标志键、emit 信号 id 都过 <code>CheckIdentifier</code>(非空白、不含空白、不以 <code>#</code> 开头;空值不报,由专项检查管);</li><li><strong>id 唯一</strong>:节点两两比对,每对重复报一次;</li><li><strong>空壳</strong>:节点指令数为 0 → 报;</li><li><strong>引用</strong>:goto/choice 目标空或不存在 → 报;</li><li><strong>必填字段</strong>:speaker 缺说话人、line 缺文本、choice 标签空、choice 标签含 <code>-&gt;</code>/<code>|</code>、set 缺键值、clear 缺标志名、emit 缺信号 id → 各报各的。</li></ol>
+<p>校验<strong>不改模型</strong>,是纯只读检查;编辑器在 F5 时调用,保存前不会自动拦截(保存始终允许,校验是提示性质的)。</p>
+<h2>7.4 编辑状态原理(EditorDocument)</h2>
+<p><code>EditorDocument</code> 是编辑器的状态层,<strong>不碰任何 UI</strong>;界面把命令翻译成它的调用,它通过 <code>Changed</code> 事件通知 UI 刷新。</p>
+<h3>脏标记是"比对出来的"</h3>
+<p><code>IsDirty</code> 不是"改过就置位"的布尔,而是:</p>
+<pre><code>IsDirty = _savedText != CurrentText
+CurrentText = CdlgFormat.Serialize(_scripts)</code></pre>
+<p>把当前模型序列化出来与上次保存(或新建/载入)的基准比对。好处:改完又撤销回去,内容与磁盘一致时<strong>不显示未保存</strong>,不会误报。</p>
+<h3>快照式撤销/重做</h3>
+<ul><li>每次变更前 <code>BeginChange()</code>:把当前状态(整份深拷贝)压入撤销栈,清空重做栈;</li><li>容量 <code>MaxHistory = 50</code>,超限丢最旧的;</li><li><code>Undo</code>:当前状态压入重做栈,恢复栈顶快照;<code>Redo</code> 反之;</li><li>快照包含:全部脚本(每层 <code>Clone</code>)、选中节点、选中指令下标;</li><li>选整份快照而不是增量补丁:脚本量级小(几十个节点),简单、无"撤销回一半"的中间态。</li></ul>
+<h3>属性编辑的特殊撤销策略</h3>
+<p>属性面板<strong>逐键输入不入栈</strong>(会让撤销栈被一串单字符淹没)。做法:</p>
+<ul><li>字段获得焦点时 <code>CaptureState()</code> 取快照;</li><li>失焦且确有改动时,<code>PushUndoState</code> 把该快照压栈。</li></ul>
+<h3>引用同步</h3>
+<ul><li><code>RenameNode(old,new)</code>:同步更新节点 id、所有 <code>TargetNode</code>、<code>EntryNodeId</code>、选中项;新 id 被占用则拒绝;</li><li><code>DeleteSelectedNode</code>:删除节点;若删的是入口,入口定义一并清空;</li><li><code>PasteNode</code>:副本 id = 原 id + <code>-copy</code>,冲突时 <code>-copy-2</code>…;引用不重定向;</li><li><code>SetSelectedInstructionKind</code>:切换类型时调用 <code>ClearIrrelevantFields</code> 清空无关字段。</li></ul>
+<h3>多 dialogue 块</h3>
+<ul><li>解析出的<strong>全部块</strong>都存进 <code>_scripts</code>;</li><li><code>Script</code> 属性返回 <code>_scripts[0]</code>(界面只编辑首个);</li><li><code>Scripts</code> 属性返回全部;保存时 <code>Serialize(_scripts)</code> <strong>原样写回所有块</strong>。</li></ul>
+<h2>7.5 命令中枢</h2>
+<p>所有界面动作(工具栏、快捷键)汇入<strong>一个命令枚举</strong> <code>EditorCommandId</code>,数值与旧 Win32 <code>cdlg-editor</code> 的命令表一致:</p>
+<table><thead><tr><th>区间</th><th>命令</th></tr></thead><tbody><tr><td>1001–1006</td><td>文件:新建 / 打开 / 保存 / 另存为 / 校验 / 退出</td></tr><tr><td>1101–1103</td><td>节点:新增 / 删除 / 设为入口</td></tr><tr><td>1201–1204</td><td>指令:新增 / 删除 / 上移 / 下移</td></tr><tr><td>1301</td><td>帮助:关于</td></tr><tr><td>1401–1408</td><td>编辑:撤销 / 重做 / 复制剪切粘贴指令 / 复制剪切粘贴节点</td></tr></tbody></table>
+<p><code>MainWindow.Execute(EditorCommandId)</code> 做分发;快捷键(<code>KeyboardAccelerator</code>)挂在根 Grid 上,回调里先 <code>e.Handled = true</code> 再分发。</p>
+<h2>7.6 流程图渲染原理(GraphPage)</h2>
+<p>流程图是<strong>代码逐笔绘制</strong>(不是 XAML 模板绑定),每次刷新清空画布重画。</p>
+<h3>布局</h3>
+<ul><li>固定参数:卡宽 168、卡高 62、列间距 96、行间距 56、<strong>3 列</strong>;</li><li>节点按列表顺序填充:<code>列 = index % 3</code>,<code>行 = index / 3</code>;</li><li>画布尺寸:宽 = max(800, 3 × (卡宽+间距)),高 = max(480, 行数 × (卡高+间距));</li><li>空脚本也铺出案垫与网格,不是白屏。</li></ul>
+<h3>绘制顺序(层次自下而上)</h3>
+<ol><li><strong>案垫背景</strong>(<code>LomaGraphDesk</code>)+ <strong>网格</strong>(<code>LomaGraphGrid</code>,32px 间距的细线);</li><li><strong>牵线</strong>:遍历每个节点的指令,<code>choice</code> / <code>goto</code> 画连线——源卡右侧中点 → 目标卡左侧中点,1.5px 细线,终点张开三角箭头;目标不存在的边跳过;</li><li><strong>索引卡</strong>:三层柔影(环境影 / 左上受光高光 / 关键影)→ 卡面(浮起渐变 + 发丝边)→ 书脊(入口用签名色,否则取节点第一条指令的语义色,空节点退回发丝边色)→ 标题与" N 条指令";</li><li><strong>连线标签</strong>:<code>choice</code> 显示选项文本,<code>goto</code> 显示 <code>goto</code>;标签先 <code>Measure</code> 量出真实尺寸再居中,压在连线中点的小纸片(带柔影)上,长短标签都居中。</li></ol>
+<h3>主题与重画</h3>
+<ul><li>所有颜色经 <code>Theme.Brush(&quot;LomaXxx&quot;, fallback)</code> 从 Loma 主题读,<strong>不写死颜色</strong>;</li><li>代码画笔画刷是"重画那一刻"取的,主题切换后必须重画一次——<code>Theme.Changed += Refresh</code> 保证深/浅色切换立即生效;</li><li>主题键万一缺失,退回内置兜底色(透明 / 发丝灰 / 墨灰 / 纸色),保证图仍可读而不崩溃。</li></ul>
+<h2>7.7 主题系统(Loma.Theme)</h2>
+<ul><li>Loma 是独立 WinUI 类库,资源字典 <code>Themes/Loma.xaml</code>;App 通过 <code>ms-appx:///Loma.Theme/Themes/Loma.xaml</code> 合并;</li><li>视图样式键:<code>LomaCard</code> / <code>LomaButton</code> / <code>LomaIconButton</code> / <code>LomaWell</code> / <code>LomaSectionTitle</code> / <code>LomaNodeRow</code> / <code>LomaInstructionRow</code> / <code>LomaPadCard</code> 等;</li><li>调色板键:<code>LomaBase</code> / <code>LomaInk</code>(系列)/ <code>LomaAccent</code> / <code>LomaSunken</code> / <code>LomaEdge</code> / <code>LomaShadow*</code> / <code>LomaGraphDesk</code> / <code>LomaGraphGrid</code> / <code>LomaThread</code> 等;</li><li>标题栏颜色也读 Loma(<code>Theme.Swatch</code>),深浅色切换时跟随;</li><li>主题库支持微交互动画(TranslateTransform + CubicEase / QuadraticEase)与桌面顶光渐变背景(<code>LomaDeskGradient</code>)。</li></ul>
+<h2>7.8 文件读写</h2>
+<ul><li>打开:<code>FileOpenPicker</code>(<code>.cdlg</code> / <code>.txt</code>)→ 读字节 → <code>new UTF8Encoding(false).GetString(bytes)</code>(兼容无/有 BOM)→ <code>TrimStart(&#x27;\uFEFF&#x27;)</code> → <code>Parse</code>;</li><li>保存:<code>Serialize</code> → UTF-8 无 BOM 字节 → 截断原文件 → 写入 → <code>MarkSaved</code>;</li><li>保存成功才更新 <code>FilePath</code> 与脏基准;失败则状态栏报错,不破坏原文件。</li></ul></section>
+<section class="chapter" id="ch-08-faq"><h1>08 · 常见问题</h1>
+<h2>兼容性</h2>
+<h3>编辑器写出的文件,游戏引擎能直接加载吗?</h3>
+<p>能。序列化严格对齐 <code>libs/cdlg</code> 解析器约定:</p>
+<ul><li>缩进:<code>dialogue</code> / 顶层 <code>end</code> = 0;<code>entry</code> / <code>node</code> / 节点块 <code>end</code> = 2;指令 = 4;</li><li>选项分隔符归一化为 <code> -&gt; </code>;</li><li>转义序列 <code>\n \t \r \\ \&quot;</code> 双向往返,未知 <code>\x</code> 保留反斜杠;</li><li>编码 UTF-8 无 BOM + LF。</li></ul>
+<h3>打开兼容哪些格式?</h3>
+<p><code>.cdlg</code> 与 <code>.txt</code>。解析宽容:BOM、<code>#</code> 注释、空行、CRLF 都能吃;Tab 按加权宽度折算进缩进层级(1 Tab = 2 空格)。</p>
+<h3>结构校验与引擎一致吗?</h3>
+<p>一致。校验规则与 <code>libs/cdlg/src/Parser.cpp</code> 的检查对齐:入口存在、节点 id 唯一、节点非空壳、goto/choice 目标存在;编辑器还额外提示各指令的必填字段。</p>
+<h2>已知限制</h2>
+<h3>为什么编辑器只编辑文件里的第一个 dialogue 块?</h3>
+<p>设计如此。解析时所有块都进模型,但界面只暴露<strong>首个块</strong>;其余块在保存时<strong>原样写回</strong>(不经过编辑器的序列化逻辑)。界面目前不提供切换块的入口。</p>
+<blockquote>需要编辑多段对话时,把目标块放在文件最前面。</blockquote>
+<h3>流程图能手动拖动布局吗?</h3>
+<p>不能。流程图是<strong>按节点顺序算出来的规则网格</strong>(3 列),脚本一改图就重画,保证图和脚本永远一致。需要手动布局请改脚本顺序。</p>
+<h3>choice 标签里能写 "->" 或 "|" 吗?</h3>
+<p>不能。<code>-&gt;</code> 与 <code>|</code> 都是解析器的选项分隔符,标签里含它们会切不出目标节点。校验器会拦下:<code>choice 标签不能包含分隔符 &#x27;-&gt;&#x27; 或 &#x27;|&#x27;</code>。</p>
+<h3>节点 id / 标志名 / 信号 id 能含空格或以 # 开头吗?</h3>
+<p>不能。它们是按词切分的标识符:含空白会被切碎,以 <code>#</code> 开头会被当注释。校验器会拦下。</p>
+<h3>为什么不能撤销到"没改之前"的每一步?</h3>
+<p>撤销栈容量 50 层(超出丢最旧),且属性面板<strong>逐键输入不入栈</strong>(取快照、失焦才入栈),避免撤销栈被单字符记录淹没。这属于预期行为。</p>
+<h2>排错</h2>
+<h3>打开文件提示"这个文件里没有 dialogue 块。"</h3>
+<p>文件里没有合法的 <code>dialogue &lt;id&gt;</code> 行。检查:首行是否为 <code>dialogue &lt;id&gt;</code>(缩进 0),或文件是否为空/全注释。</p>
+<h3>打开文件提示"已载入,但解析报了 N 个问题"</h3>
+<p>文件读进来了,但有解析问题(如缩进层级错、命令拼错、缺参数)。按 <code>F5</code> 查看逐行详情,每条都带行号。</p>
+<h3>F5 校验报"入口节点 'x' 不存在"</h3>
+<p><code>entry x</code> 指向的节点不存在。可能:节点被删了,或 id 拼写不一致(大小写敏感)。在节点栏加回该节点,或把 <code>entry</code> 改指向存在的节点。</p>
+<h3>F5 校验报"节点 'x' 引用了不存在的节点 'y'"</h3>
+<p>某个 <code>goto</code> / <code>choice</code> 指向不存在的节点。删除该指令,或补建节点 <code>y</code>。注意:流程图里这种连线<strong>画不出来</strong>,可借此定位。</p>
+<h3>校验报"节点 'x' 没有任何指令"</h3>
+<p>节点是空壳。给它加至少一条指令,或删除该节点。</p>
+<h3>保存后文件打不开 / 引擎报错</h3>
+<ul><li>确认没有把非法内容写进标识符字段(含空白 / <code>#</code> 开头 / <code>choice</code> 标签含分隔符)——这些在保存前会被 F5 拦下;</li><li>确认文件编码为 UTF-8(无 BOM 即可);</li><li>确认缩进层级没有错位。</li></ul>
+<h3>撤销栈深度总是 0?</h3>
+<p>新建 / 载入会清空历史;若刚打开文件还没做过改动,撤销栈自然是空的。</p>
+<h2>开发者</h2>
+<h3>文档如何生成静态网站?</h3>
+<pre><code>python tools/build_docs.py</code></pre>
+<p>从 <code>docs/*.md</code> 生成单文件自包含 HTML(内嵌样式与导航),浏览器直接打开,或部署到任意静态托管。</p>
+<h3>代码结构从哪看起?</h3>
+<ul><li>格式与解析:<code>src/VisualDialoguer.Core/Format/CdlgFormat.cs</code></li><li>模型:<code>src/VisualDialoguer.Core/Model/</code></li><li>编辑状态:<code>src/VisualDialoguer.Core/Editing/EditorDocument.cs</code></li><li>界面:<code>src/VisualDialoguer.App/</code>(主窗口、Views/)</li><li>主题:<code>src/Loma.Theme/Themes/Loma.xaml</code></li></ul></section>
+</main>
+</div>
+<a id="top-link" href="#ch-index">回到顶部</a>
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('#toc nav a'));
+  var sections = links.map(function (a) {
+    return document.querySelector(a.getAttribute('href'));
+  });
+  function activate(id) {
+    links.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === id);
+    });
+  }
+  var inView = 'ch-index';
+  function onScroll() {
+    var probe = window.scrollY + 120;
+    var current = inView;
+    sections.forEach(function (s, i) {
+      if (s && s.offsetTop <= probe) current = links[i].getAttribute('href');
+    });
+    if (current !== inView) { inView = current; activate(current); }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>

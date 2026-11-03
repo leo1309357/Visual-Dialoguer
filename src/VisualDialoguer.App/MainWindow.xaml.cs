@@ -152,6 +152,9 @@ public sealed partial class MainWindow : Window
             case EditorCommandId.FileValidate:
                 ShowValidation();
                 break;
+            case EditorCommandId.HelpAbout:
+                ToggleHelp();
+                break;
             case EditorCommandId.EditUndo:
                 if (!_document.Undo()) { SetStatus("没有可撤销的改动。"); return; }
                 break;
@@ -219,6 +222,57 @@ public sealed partial class MainWindow : Window
         if (_graphVisible) GraphPage.Refresh();
     }
 
+    // ---- 帮助 --------------------------------------------------------------
+
+    private bool _helpLoaded;
+
+    private void OnToggleHelp(object sender, RoutedEventArgs e) => ToggleHelp();
+
+    private void ToggleHelp()
+    {
+        HelpOverlay.Visibility = HelpOverlay.Visibility == Visibility.Visible
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        if (HelpOverlay.Visibility == Visibility.Visible)
+        {
+            EnsureHelpLoaded();
+        }
+    }
+
+    /// <summary>
+    /// 首次打开时把嵌入的 CDLG 参考手册 HTML 装入 WebView2。
+    /// 之后再次打开直接复用已加载的页面。
+    /// </summary>
+    private async void EnsureHelpLoaded()
+    {
+        if (_helpLoaded)
+        {
+            return;
+        }
+        _helpLoaded = true;
+        try
+        {
+            string html = ReadEmbeddedHelp();
+            await HelpWebView.EnsureCoreWebView2Async();
+            HelpWebView.NavigateToString(html);
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"帮助文档加载失败:{ex.Message}");
+        }
+    }
+
+    /// <summary>从嵌入资源读取帮助 HTML(生成器产物,与静态站同一份)。</summary>
+    private static string ReadEmbeddedHelp()
+    {
+        const string resourceName = "VisualDialoguer.App.Assets.Docs.cdlg-docs.html";
+        using Stream? stream = System.Reflection.Assembly.GetExecutingAssembly()
+            .GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"找不到嵌入资源 {resourceName}");
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        return reader.ReadToEnd();
+    }
+
     // ---- 快捷键 --------------------------------------------------------------
 
     private void OnAcceleratorNew(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) { e.Handled = true; Execute(EditorCommandId.FileNew); }
@@ -229,6 +283,7 @@ public sealed partial class MainWindow : Window
     private void OnAcceleratorUndo(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) { e.Handled = true; Execute(EditorCommandId.EditUndo); }
     private void OnAcceleratorRedo(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) { e.Handled = true; Execute(EditorCommandId.EditRedo); }
     private void OnAcceleratorToggleGraph(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) { e.Handled = true; ToggleGraph(); }
+    private void OnAcceleratorHelp(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) { e.Handled = true; ToggleHelp(); }
 
     // ---- 文件 ----------------------------------------------------------------
 

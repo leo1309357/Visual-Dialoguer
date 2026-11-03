@@ -42,4 +42,10 @@
     <ProjectReference Include="..\Loma.Theme\Loma.Theme.csproj" />
   </ItemGroup>
 
+  <!-- 帮助文档:由 tools/build_docs.py 生成(同一份 HTML 也是静态站产物),
+       以嵌入资源打进程序集,运行时由帮助面板读取并内嵌浏览。 -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Docs\cdlg-docs.html" />
+  </ItemGroup>
+
 </Project>
