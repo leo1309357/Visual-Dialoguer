@@ -37,6 +37,7 @@
                     <Button
                         Grid.Column="2"
                         Content="设为入口"
+                        Style="{StaticResource LomaButton}"
                         Click="OnSetEntry" />
                 </Grid>
 

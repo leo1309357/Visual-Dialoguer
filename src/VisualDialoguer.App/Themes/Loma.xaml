@@ -702,19 +702,19 @@
                     <Grid>
                         <!-- 外层环境影：大而淡，向四周铺开 -->
                         <Border
-                            Margin="6,10,-6,-10"
+                            Margin="4,8,-4,-8"
                             Background="{ThemeResource LomaShadowAmbient}"
                             CornerRadius="{StaticResource LomaCardRadius}"
                             IsHitTestVisible="False" />
                         <!-- 内层接触影：贴边偏右下，给出厚度 -->
                         <Border
-                            Margin="3,5,-3,-5"
+                            Margin="2,3,-2,-3"
                             Background="{ThemeResource LomaShadowDarkDeep}"
                             CornerRadius="{StaticResource LomaCardRadius}"
                             IsHitTestVisible="False" />
                         <!-- 左上亮高光 -->
                         <Border
-                            Margin="-3,-5,3,5"
+                            Margin="-2,-3,2,3"
                             Background="{ThemeResource LomaShadowLight}"
                             CornerRadius="{StaticResource LomaCardRadius}"
                             IsHitTestVisible="False" />
@@ -756,17 +756,17 @@
                                      贴齐井口自己的圆角（Margin 不再留 2px），
                                      否则井口边缘会露出一条底色细缝，
                                      看着像框外又描了一道线。
-                                     高度必须 ≥ 圆角半径：12px 高的带子套 6 的
+                                     高度必须 ≥ 圆角半径：8px 高的带子套 6 的
                                      圆角，弧线占位不超过 6px，填充完整可见。 -->
                                 <Border
-                                    Height="12"
+                                    Height="8"
                                     VerticalAlignment="Top"
                                     CornerRadius="6,6,0,0"
                                     Background="{ThemeResource LomaWellShade}"
                                     IsHitTestVisible="False" />
                                 <!-- 井口底部反弹光：下亮上无，渐亮而非一块亮片 -->
                                 <Border
-                                    Height="12"
+                                    Height="8"
                                     VerticalAlignment="Bottom"
                                     CornerRadius="0,0,6,6"
                                     Background="{ThemeResource LomaWellLip}"
@@ -816,21 +816,21 @@
                         <!-- 右下暗投影（凸起时可见，按下时隐藏） -->
                         <Border
                             x:Name="ShadowDark"
-                            Margin="2,4,-2,-4"
+                            Margin="2,3,-2,-3"
                             Background="{ThemeResource LomaShadowDarkDeep}"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             IsHitTestVisible="False" />
                         <!-- 左上亮高光（凸起时可见，按下时隐藏） -->
                         <Border
                             x:Name="ShadowLight"
-                            Margin="-2,-4,2,4"
+                            Margin="-2,-3,2,3"
                             Background="{ThemeResource LomaShadowLight}"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             IsHitTestVisible="False" />
                         <!-- 按下时的反向投影（左上暗） -->
                         <Border
                             x:Name="ShadowDarkInset"
-                            Margin="-2,-4,2,4"
+                            Margin="-2,-3,2,3"
                             Background="{ThemeResource LomaShadowDarkDeep}"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             IsHitTestVisible="False"
@@ -838,7 +838,7 @@
                         <!-- 按下时的反向高光（右下亮） -->
                         <Border
                             x:Name="ShadowLightInset"
-                            Margin="2,4,-2,-4"
+                            Margin="2,3,-2,-3"
                             Background="{ThemeResource LomaShadowLight}"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             IsHitTestVisible="False"

@@ -22,7 +22,7 @@
         <!-- ════════ 左栏：节点列表 ════════ -->
         <ContentControl Grid.Column="0" Style="{StaticResource LomaCard}">
             <Grid
-                Padding="14,14,14,14"
+                Padding="{StaticResource LomaPadCard}"
                 RowSpacing="8"
                 RowDefinitions="Auto,Auto,*,Auto">
 
@@ -33,7 +33,6 @@
                     Grid.Row="1"
                     x:Name="NodeSearch"
                     PlaceholderText="筛选节点…"
-                    CornerRadius="10"
                     GotFocus="OnSearchGotFocus"
                     LostFocus="OnSearchLostFocus"
                     TextChanged="OnNodeSearchTextChanged" />
@@ -99,7 +98,6 @@
                     <TextBox
                         x:Name="InstructionSearch"
                         PlaceholderText="搜索指令内容…"
-                        CornerRadius="10"
                         GotFocus="OnSearchGotFocus"
                         LostFocus="OnSearchLostFocus"
                         TextChanged="OnInstructionSearchTextChanged" />
